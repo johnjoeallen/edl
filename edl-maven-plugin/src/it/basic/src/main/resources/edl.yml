@@ -1,0 +1,15 @@
+package: com.example.edl
+rootException: ExampleEdlException
+source: example-service
+categories:
+  Validation:
+    codePrefix: VAL
+  NotFound:
+    codePrefix: NF
+errors:
+  userNotFound:
+    category: NotFound
+    code: 1
+    message: "User {userId} not found"
+    params:
+      userId: String

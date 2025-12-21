@@ -1,0 +1,15 @@
+package: com.example.hello
+rootException: HelloRootException
+source: hello-service
+categories:
+  Common:
+    codePrefix: CM
+errors:
+  helloWorld:
+    category: Common
+    code: 1
+    message: "Hello {name}"
+    params:
+      name: String
+    requiredParams:
+      - name

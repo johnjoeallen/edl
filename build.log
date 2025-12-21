@@ -1,0 +1,327 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] edl-parent                                                         [pom]
+[INFO] edl-core                                                           [jar]
+[INFO] edl-maven-plugin                                          [maven-plugin]
+[INFO] edl-samples                                                        [jar]
+[INFO] 
+[INFO] -------------------------< com.edl:edl-parent >-------------------------
+[INFO] Building edl-parent 0.1.0-SNAPSHOT                                 [1/4]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ edl-parent ---
+[INFO] 
+[INFO] --- install:3.1.2:install (default-install) @ edl-parent ---
+[INFO] Installing /home/jallen/git/edl/pom.xml to /home/jallen/.m2/repository/com/edl/edl-parent/0.1.0-SNAPSHOT/edl-parent-0.1.0-SNAPSHOT.pom
+[INFO] 
+[INFO] --------------------------< com.edl:edl-core >--------------------------
+[INFO] Building edl-core 0.1.0-SNAPSHOT                                   [2/4]
+[INFO]   from edl-core/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ edl-core ---
+[INFO] Deleting /home/jallen/git/edl/edl-core/target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ edl-core ---
+[INFO] skip non existing resourceDirectory /home/jallen/git/edl/edl-core/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ edl-core ---
+[INFO] Changes detected - recompiling the module! :source
+[INFO] Compiling 16 source files with javac [debug release 17] to target/classes
+[INFO] 
+[INFO] --- jar:3.3.0:jar (default-jar) @ edl-core ---
+[INFO] Building jar: /home/jallen/git/edl/edl-core/target/edl-core-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ edl-core ---
+[INFO] Copying 0 resource from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ edl-core ---
+[INFO] Changes detected - recompiling the module! :dependency
+[INFO] Compiling 1 source file with javac [debug release 17] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ edl-core ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.edl.core.SpecParserTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.042 s -- in com.edl.core.SpecParserTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- install:3.1.2:install (default-install) @ edl-core ---
+[INFO] Installing /home/jallen/git/edl/edl-core/pom.xml to /home/jallen/.m2/repository/com/edl/edl-core/0.1.0-SNAPSHOT/edl-core-0.1.0-SNAPSHOT.pom
+[INFO] Installing /home/jallen/git/edl/edl-core/target/edl-core-0.1.0-SNAPSHOT.jar to /home/jallen/.m2/repository/com/edl/edl-core/0.1.0-SNAPSHOT/edl-core-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ edl-core ---
+[INFO] skip non existing resourceDirectory /home/jallen/git/edl/edl-core/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ edl-core ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- jar:3.3.0:jar (default-jar) @ edl-core ---
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ edl-core ---
+[INFO] Copying 0 resource from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ edl-core ---
+[INFO] Changes detected - recompiling the module! :dependency
+[INFO] Compiling 1 source file with javac [debug release 17] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ edl-core ---
+[INFO] Skipping execution of surefire because it has already been run for this configuration
+[INFO] 
+[INFO] ----------------------< com.edl:edl-maven-plugin >----------------------
+[INFO] Building edl-maven-plugin 0.1.0-SNAPSHOT                           [3/4]
+[INFO]   from edl-maven-plugin/pom.xml
+[INFO] ----------------------------[ maven-plugin ]----------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ edl-maven-plugin ---
+[INFO] Deleting /home/jallen/git/edl/edl-maven-plugin/target
+[INFO] 
+[INFO] --- antrun:3.1.0:run (clean-invoker-repo) @ edl-maven-plugin ---
+[INFO] Executing tasks
+[INFO] Executed tasks
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ edl-maven-plugin ---
+[INFO] skip non existing resourceDirectory /home/jallen/git/edl/edl-maven-plugin/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ edl-maven-plugin ---
+[INFO] Changes detected - recompiling the module! :dependency
+[INFO] Compiling 1 source file with javac [debug release 17] to target/classes
+[INFO] 
+[INFO] --- plugin:3.12.0:descriptor (default-descriptor) @ edl-maven-plugin ---
+[INFO] Using 'UTF-8' encoding to read mojo source files.
+[INFO] java-annotations mojo extractor found 1 mojo descriptor.
+[INFO] java-javadoc mojo extractor found 0 mojo descriptor.
+[INFO] ant mojo extractor found 0 mojo descriptor.
+[INFO] bsh mojo extractor found 0 mojo descriptor.
+[INFO] 
+[INFO] --- plugin:3.12.0:descriptor (mojo-descriptor) @ edl-maven-plugin ---
+[INFO] Using 'UTF-8' encoding to read mojo source files.
+[INFO] java-annotations mojo extractor found 1 mojo descriptor.
+[INFO] java-javadoc mojo extractor found 0 mojo descriptor.
+[INFO] ant mojo extractor found 0 mojo descriptor.
+[INFO] bsh mojo extractor found 0 mojo descriptor.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ edl-maven-plugin ---
+[INFO] skip non existing resourceDirectory /home/jallen/git/edl/edl-maven-plugin/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ edl-maven-plugin ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ edl-maven-plugin ---
+[INFO] No tests to run.
+[INFO] 
+[INFO] --- jar:3.4.1:jar (default-jar) @ edl-maven-plugin ---
+[INFO] Building jar: /home/jallen/git/edl/edl-maven-plugin/target/edl-maven-plugin-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- install:3.1.1:install-file (install-parent-pom) @ edl-maven-plugin ---
+[INFO] Installing /home/jallen/git/edl/pom.xml to /home/jallen/git/edl/edl-maven-plugin/target/it-repo/com/edl/edl-parent/0.1.0-SNAPSHOT/edl-parent-0.1.0-SNAPSHOT.pom
+[INFO] 
+[INFO] --- install:3.1.1:install-file (install-edl-core) @ edl-maven-plugin ---
+[INFO] Installing /home/jallen/git/edl/edl-core/target/edl-core-0.1.0-SNAPSHOT.jar to /home/jallen/git/edl/edl-maven-plugin/target/it-repo/com/edl/edl-core/0.1.0-SNAPSHOT/edl-core-0.1.0-SNAPSHOT.jar
+[INFO] Installing /home/jallen/git/edl/edl-core/pom.xml to /home/jallen/git/edl/edl-maven-plugin/target/it-repo/com/edl/edl-core/0.1.0-SNAPSHOT/edl-core-0.1.0-SNAPSHOT.pom
+[INFO] 
+[INFO] --- install:3.1.1:install-file (install-edl-maven-plugin) @ edl-maven-plugin ---
+[INFO] Installing /home/jallen/git/edl/edl-maven-plugin/target/edl-maven-plugin-0.1.0-SNAPSHOT.jar to /home/jallen/git/edl/edl-maven-plugin/target/it-repo/com/edl/edl-maven-plugin/0.1.0-SNAPSHOT/edl-maven-plugin-0.1.0-SNAPSHOT.jar
+[INFO] Installing /home/jallen/git/edl/edl-maven-plugin/pom.xml to /home/jallen/git/edl/edl-maven-plugin/target/it-repo/com/edl/edl-maven-plugin/0.1.0-SNAPSHOT/edl-maven-plugin-0.1.0-SNAPSHOT.pom
+[INFO] 
+[INFO] --- invoker:3.6.0:run (invoker-run) @ edl-maven-plugin ---
+[INFO] Building: basic/pom.xml
+[INFO] run pre-build script setup.groovy.groovy
+[INFO] Running pre-build script: /home/jallen/git/edl/edl-maven-plugin/target/it/basic/setup.groovy
+[INFO] Finished pre-build script: /home/jallen/git/edl/edl-maven-plugin/target/it/basic/setup.groovy
+[INFO] [INFO] Error stacktraces are turned on.
+[INFO] [INFO] Scanning for projects...
+[INFO] [INFO] 
+[INFO] [INFO] ------------------------< com.edl.it:basic-it >-------------------------
+[INFO] [INFO] Building basic-it 0.1.0-SNAPSHOT
+[INFO] [INFO]   from pom.xml
+[INFO] [INFO] --------------------------------[ jar ]---------------------------------
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-clean-plugin/3.2.0/maven-clean-plugin-3.2.0.pom
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-clean-plugin/3.2.0/maven-clean-plugin-3.2.0.pom (5.3 kB at 42 kB/s)
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-plugins/35/maven-plugins-35.pom
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-plugins/35/maven-plugins-35.pom (9.9 kB at 367 kB/s)
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/35/maven-parent-35.pom
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/35/maven-parent-35.pom (45 kB at 1.4 MB/s)
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/apache/25/apache-25.pom
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/apache/25/apache-25.pom (21 kB at 761 kB/s)
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-clean-plugin/3.2.0/maven-clean-plugin-3.2.0.jar
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-clean-plugin/3.2.0/maven-clean-plugin-3.2.0.jar (36 kB at 1.2 MB/s)
+[INFO] [INFO] 
+[INFO] [INFO] --- clean:3.2.0:clean (default-clean) @ basic-it ---
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-utils/3.3.4/maven-shared-utils-3.3.4.pom
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-utils/3.3.4/maven-shared-utils-3.3.4.pom (5.8 kB at 224 kB/s)
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-components/34/maven-shared-components-34.pom
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-components/34/maven-shared-components-34.pom (5.1 kB at 212 kB/s)
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/34/maven-parent-34.pom
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/34/maven-parent-34.pom (43 kB at 1.8 MB/s)
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/apache/23/apache-23.pom
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/apache/23/apache-23.pom (18 kB at 709 kB/s)
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.6/commons-io-2.6.pom
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.6/commons-io-2.6.pom (14 kB at 492 kB/s)
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-parent/42/commons-parent-42.pom
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-parent/42/commons-parent-42.pom (68 kB at 2.1 MB/s)
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/apache/18/apache-18.pom
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/apache/18/apache-18.pom (16 kB at 627 kB/s)
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-utils/3.3.4/maven-shared-utils-3.3.4.jar
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-utils/3.3.4/maven-shared-utils-3.3.4.jar (153 kB at 5.5 MB/s)
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.6/commons-io-2.6.jar
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.6/commons-io-2.6.jar (215 kB at 7.7 MB/s)
+[INFO] [INFO] 
+[INFO] [INFO] --- edl:0.1.0-SNAPSHOT:generate-exceptions (default) @ basic-it ---
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/yaml/snakeyaml/2.2/snakeyaml-2.2.pom
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/yaml/snakeyaml/2.2/snakeyaml-2.2.pom (21 kB at 590 kB/s)
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/squareup/javapoet/1.13.0/javapoet-1.13.0.pom
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/squareup/javapoet/1.13.0/javapoet-1.13.0.pom (4.8 kB at 211 kB/s)
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/sonatype/oss/oss-parent/7/oss-parent-7.pom
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/sonatype/oss/oss-parent/7/oss-parent-7.pom (4.8 kB at 201 kB/s)
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/yaml/snakeyaml/2.2/snakeyaml-2.2.jar
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/yaml/snakeyaml/2.2/snakeyaml-2.2.jar (334 kB at 12 MB/s)
+[INFO] [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/squareup/javapoet/1.13.0/javapoet-1.13.0.jar
+[INFO] [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/squareup/javapoet/1.13.0/javapoet-1.13.0.jar (106 kB at 3.2 MB/s)
+[INFO] [INFO] EDL generated 4 files into /home/jallen/git/edl/edl-maven-plugin/target/it/basic/target/generated-sources/edl
+[INFO] [INFO] ------------------------------------------------------------------------
+[INFO] [INFO] BUILD SUCCESS
+[INFO] [INFO] ------------------------------------------------------------------------
+[INFO] [INFO] Total time:  0.883 s
+[INFO] [INFO] Finished at: 2025-12-21T14:04:01Z
+[INFO] [INFO] ------------------------------------------------------------------------
+[INFO]           basic/pom.xml .................................... SUCCESS (1.437 s)
+[INFO] -------------------------------------------------
+[INFO] Build Summary:
+[INFO]   Passed: 1, Failed: 0, Errors: 0, Skipped: 0
+[INFO] -------------------------------------------------
+[INFO] 
+[INFO] --- failsafe:3.2.5:integration-test (failsafe-integration-tests) @ edl-maven-plugin ---
+[INFO] No tests to run.
+[INFO] 
+[INFO] --- failsafe:3.2.5:verify (failsafe-integration-tests) @ edl-maven-plugin ---
+[INFO] 
+[INFO] --- install:3.1.1:install (default-install) @ edl-maven-plugin ---
+[INFO] Installing /home/jallen/git/edl/edl-maven-plugin/pom.xml to /home/jallen/.m2/repository/com/edl/edl-maven-plugin/0.1.0-SNAPSHOT/edl-maven-plugin-0.1.0-SNAPSHOT.pom
+[INFO] Installing /home/jallen/git/edl/edl-maven-plugin/target/edl-maven-plugin-0.1.0-SNAPSHOT.jar to /home/jallen/.m2/repository/com/edl/edl-maven-plugin/0.1.0-SNAPSHOT/edl-maven-plugin-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- antrun:3.1.0:run (clean-invoker-repo) @ edl-maven-plugin ---
+[INFO] Executing tasks
+[INFO]    [delete] Deleting directory /home/jallen/git/edl/edl-maven-plugin/target/it-repo
+[INFO]    [delete] Deleting directory /home/jallen/git/edl/edl-maven-plugin/target/it
+[INFO] Executed tasks
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ edl-maven-plugin ---
+[INFO] skip non existing resourceDirectory /home/jallen/git/edl/edl-maven-plugin/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ edl-maven-plugin ---
+[INFO] Changes detected - recompiling the module! :dependency
+[INFO] Compiling 1 source file with javac [debug release 17] to target/classes
+[INFO] 
+[INFO] --- plugin:3.12.0:descriptor (default-descriptor) @ edl-maven-plugin ---
+[INFO] Using 'UTF-8' encoding to read mojo source files.
+[INFO] java-annotations mojo extractor found 1 mojo descriptor.
+[INFO] java-javadoc mojo extractor found 0 mojo descriptor.
+[INFO] ant mojo extractor found 0 mojo descriptor.
+[INFO] bsh mojo extractor found 0 mojo descriptor.
+[INFO] 
+[INFO] --- plugin:3.12.0:descriptor (mojo-descriptor) @ edl-maven-plugin ---
+[INFO] Using 'UTF-8' encoding to read mojo source files.
+[INFO] java-annotations mojo extractor found 1 mojo descriptor.
+[INFO] java-javadoc mojo extractor found 0 mojo descriptor.
+[INFO] ant mojo extractor found 0 mojo descriptor.
+[INFO] bsh mojo extractor found 0 mojo descriptor.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ edl-maven-plugin ---
+[INFO] skip non existing resourceDirectory /home/jallen/git/edl/edl-maven-plugin/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ edl-maven-plugin ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ edl-maven-plugin ---
+[INFO] No tests to run.
+[INFO] Skipping execution of surefire because it has already been run for this configuration
+[INFO] 
+[INFO] ------------------------< com.edl:edl-samples >-------------------------
+[INFO] Building edl-samples 0.1.0-SNAPSHOT                                [4/4]
+[INFO]   from edl-samples/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ edl-samples ---
+[INFO] Deleting /home/jallen/git/edl/edl-samples/target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ edl-samples ---
+[INFO] skip non existing resourceDirectory /home/jallen/git/edl/edl-samples/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ edl-samples ---
+[INFO] Changes detected - recompiling the module! :dependency
+[INFO] Compiling 1 source file with javac [debug release 17] to target/classes
+[INFO] 
+[INFO] --- exec:3.1.1:java (generate-samples) @ edl-samples ---
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ edl-samples ---
+[INFO] Copying 23 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ edl-samples ---
+[INFO] Changes detected - recompiling the module! :dependency
+[INFO] Compiling 2 source files with javac [debug release 17] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ edl-samples ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.edl.samples.GoldenFileTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.072 s -- in com.edl.samples.GoldenFileTest
+[INFO] Running com.edl.samples.GeneratedExceptionRuntimeTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.196 s -- in com.edl.samples.GeneratedExceptionRuntimeTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- jar:3.4.1:jar (default-jar) @ edl-samples ---
+[INFO] Building jar: /home/jallen/git/edl/edl-samples/target/edl-samples-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- install:3.1.2:install (default-install) @ edl-samples ---
+[INFO] Installing /home/jallen/git/edl/edl-samples/pom.xml to /home/jallen/.m2/repository/com/edl/edl-samples/0.1.0-SNAPSHOT/edl-samples-0.1.0-SNAPSHOT.pom
+[INFO] Installing /home/jallen/git/edl/edl-samples/target/edl-samples-0.1.0-SNAPSHOT.jar to /home/jallen/.m2/repository/com/edl/edl-samples/0.1.0-SNAPSHOT/edl-samples-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ edl-samples ---
+[INFO] skip non existing resourceDirectory /home/jallen/git/edl/edl-samples/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ edl-samples ---
+[INFO] Changes detected - recompiling the module! :dependency
+[INFO] Compiling 1 source file with javac [debug release 17] to target/classes
+[INFO] 
+[INFO] --- exec:3.1.1:java (generate-samples) @ edl-samples ---
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ edl-samples ---
+[INFO] Copying 23 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ edl-samples ---
+[INFO] Changes detected - recompiling the module! :dependency
+[INFO] Compiling 2 source files with javac [debug release 17] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ edl-samples ---
+[INFO] Skipping execution of surefire because it has already been run for this configuration
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for edl-parent 0.1.0-SNAPSHOT:
+[INFO] 
+[INFO] edl-parent ......................................... SUCCESS [  0.095 s]
+[INFO] edl-core ........................................... SUCCESS [  0.880 s]
+[INFO] edl-maven-plugin ................................... SUCCESS [  2.399 s]
+[INFO] edl-samples ........................................ SUCCESS [  0.634 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  4.049 s
+[INFO] Finished at: 2025-12-21T14:04:02Z
+[INFO] ------------------------------------------------------------------------

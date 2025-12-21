@@ -1,0 +1,16 @@
+/home/jallen/git/edl/edl-core/src/main/java/com/edl/core/NameUtils.java
+/home/jallen/git/edl/edl-core/src/main/java/com/edl/core/CompilationResult.java
+/home/jallen/git/edl/edl-core/src/main/java/com/edl/core/Validator.java
+/home/jallen/git/edl/edl-core/src/main/java/com/edl/core/ValidationResult.java
+/home/jallen/git/edl/edl-core/src/main/java/com/edl/core/SpecParser.java
+/home/jallen/git/edl/edl-core/src/main/java/com/edl/core/CategoryDef.java
+/home/jallen/git/edl/edl-core/src/main/java/com/edl/core/DiagnosticSeverity.java
+/home/jallen/git/edl/edl-core/src/main/java/com/edl/core/EdlCompiler.java
+/home/jallen/git/edl/edl-core/src/main/java/com/edl/core/ErrorDef.java
+/home/jallen/git/edl/edl-core/src/main/java/com/edl/core/EdlSpec.java
+/home/jallen/git/edl/edl-core/src/main/java/com/edl/core/YamlDocument.java
+/home/jallen/git/edl/edl-core/src/main/java/com/edl/core/Diagnostic.java
+/home/jallen/git/edl/edl-core/src/main/java/com/edl/core/CompilerOptions.java
+/home/jallen/git/edl/edl-core/src/main/java/com/edl/core/JavaGenerator.java
+/home/jallen/git/edl/edl-core/src/main/java/com/edl/core/YamlLoader.java
+/home/jallen/git/edl/edl-core/src/main/java/com/edl/core/ParseResult.java
