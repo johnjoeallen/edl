@@ -11,6 +11,7 @@ public final class ErrorDef {
   private final LinkedHashMap<String, String> requiredParams;
   private final LinkedHashMap<String, String> optionalParams;
   private final boolean recoverable;
+  private final Integer httpStatus;
 
   public ErrorDef(String name,
                   String category,
@@ -19,7 +20,8 @@ public final class ErrorDef {
                   String detail,
                   LinkedHashMap<String, String> requiredParams,
                   LinkedHashMap<String, String> optionalParams,
-                  boolean recoverable) {
+                  boolean recoverable,
+                  Integer httpStatus) {
     this.name = name;
     this.category = category;
     this.numericCode = numericCode;
@@ -28,6 +30,7 @@ public final class ErrorDef {
     this.requiredParams = requiredParams;
     this.optionalParams = optionalParams;
     this.recoverable = recoverable;
+    this.httpStatus = httpStatus;
   }
 
   public String getName() {
@@ -60,5 +63,9 @@ public final class ErrorDef {
 
   public boolean isRecoverable() {
     return recoverable;
+  }
+
+  public Integer getHttpStatus() {
+    return httpStatus;
   }
 }

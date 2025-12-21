@@ -11,13 +11,11 @@ import java.util.Objects;
 public abstract class CommonException extends HelloException {
   private static final String CODE_PREFIX = "CM";
 
-  protected CommonException(String errorCode, String descriptionTemplate, String detailTemplate,
-      Map<String, Object> details, Throwable cause) {
-    super(CODE_PREFIX + Objects.requireNonNull(errorCode, "errorCode"), descriptionTemplate, detailTemplate, details, cause);
-  }
+  protected static final int HTTP_STATUS = 500;
 
-  public int httpStatus() {
-    return 500;
+  protected CommonException(String errorCode, int httpStatus, String descriptionTemplate,
+      String detailTemplate, Map<String, Object> details, Throwable cause) {
+    super(CODE_PREFIX + Objects.requireNonNull(errorCode, "errorCode"), httpStatus, descriptionTemplate, detailTemplate, details, cause);
   }
 
   @Override

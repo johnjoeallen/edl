@@ -128,6 +128,7 @@ public final class SpecParser {
       LinkedHashMap<String, String> requiredParams = readStringMap(errorMap, diagnostics, file, marks, path + ".required", false);
       LinkedHashMap<String, String> optionalParams = readStringMapOrList(errorMap, diagnostics, file, marks, path + ".optional", false);
       Boolean recoverable = readBoolean(errorMap, diagnostics, file, marks, path + ".recoverable", false);
+      Integer httpStatus = readInteger(errorMap, diagnostics, file, marks, path + ".httpStatus", false);
       if (category == null || description == null || detail == null || codeValue == null) {
         if (codeValue == null) {
           diagnostics.add(diagnostic(DiagnosticSeverity.ERROR, "Missing required key 'code'", path + ".fixed.code", file, marks));
@@ -145,7 +146,7 @@ public final class SpecParser {
         optionalParams = new LinkedHashMap<>();
       }
       boolean isRecoverable = recoverable != null && recoverable;
-      errors.put(name, new ErrorDef(name, category, numericCode, description, detail, requiredParams, optionalParams, isRecoverable));
+      errors.put(name, new ErrorDef(name, category, numericCode, description, detail, requiredParams, optionalParams, isRecoverable, httpStatus));
     }
     return errors;
   }

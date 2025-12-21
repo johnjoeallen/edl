@@ -40,7 +40,7 @@ public final class EdlCompiler {
       return new CompilationResult(List.of(), diagnostics);
     }
 
-    JavaGenerator generator = new JavaGenerator();
+    JavaGenerator generator = new JavaGenerator(options != null && options.isGenerateSpringHandler());
     List<Path> generatedFiles = generator.generate(spec, outputDirectory);
     if (options != null && options.isGenerateDocs()) {
       generatedFiles.add(writeDocs(spec, outputDirectory));

@@ -20,7 +20,7 @@ public final class MissingFieldException extends InputException {
   private final String field;
 
   private MissingFieldException(String field, Map<String, Object> details, Throwable cause) {
-    super(ERROR_CODE, DESCRIPTION_TEMPLATE, DETAIL_TEMPLATE, Objects.requireNonNull(details, "details"), cause);
+    super(ERROR_CODE, HTTP_STATUS, DESCRIPTION_TEMPLATE, DETAIL_TEMPLATE, Objects.requireNonNull(details, "details"), cause);
     this.field = field;
   }
 

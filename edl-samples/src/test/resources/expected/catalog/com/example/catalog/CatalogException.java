@@ -19,13 +19,16 @@ public abstract class CatalogException extends RuntimeException {
 
   private final Map<String, Object> details;
 
-  protected CatalogException(String code, String descriptionTemplate, String detailTemplate,
-      Map<String, Object> details, Throwable cause) {
+  private final int httpStatus;
+
+  protected CatalogException(String code, int httpStatus, String descriptionTemplate,
+      String detailTemplate, Map<String, Object> details, Throwable cause) {
     super(descriptionTemplate, cause);
     this.code = Objects.requireNonNull(code, "code");
     this.descriptionTemplate = Objects.requireNonNull(descriptionTemplate, "descriptionTemplate");
     this.detailTemplate = Objects.requireNonNull(detailTemplate, "detailTemplate");
     this.details = Map.copyOf(Objects.requireNonNull(details, "details"));
+    this.httpStatus = httpStatus;
   }
 
   public String code() {
@@ -62,6 +65,10 @@ public abstract class CatalogException extends RuntimeException {
 
   public boolean recoverable() {
     return false;
+  }
+
+  public int httpStatus() {
+    return httpStatus;
   }
 
   protected abstract Map<String, Object> coreValues();

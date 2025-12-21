@@ -33,6 +33,15 @@ public final class JavaGenerator {
       Set.of("source", "code", "description", "detail", "details", "recoverable");
   private static final Set<String> RENDERABLE_DERIVED_PARAMS =
       Set.of("source", "code", "recoverable");
+  private final boolean includeHttpStatus;
+
+  public JavaGenerator() {
+    this(false);
+  }
+
+  public JavaGenerator(boolean includeHttpStatus) {
+    this.includeHttpStatus = includeHttpStatus;
+  }
 
   public List<Path> generate(EdlSpec spec, Path outputDirectory) throws IOException {
     List<Path> generatedFiles = new ArrayList<>();
@@ -79,13 +88,20 @@ public final class JavaGenerator {
     FieldSpec descriptionTemplateField = FieldSpec.builder(String.class, "descriptionTemplate", Modifier.PRIVATE, Modifier.FINAL).build();
     FieldSpec detailTemplateField = FieldSpec.builder(String.class, "detailTemplate", Modifier.PRIVATE, Modifier.FINAL).build();
     FieldSpec detailsField = FieldSpec.builder(mapStringObject, "details", Modifier.PRIVATE, Modifier.FINAL).build();
+    FieldSpec httpStatusField = includeHttpStatus
+        ? FieldSpec.builder(int.class, "httpStatus", Modifier.PRIVATE, Modifier.FINAL).build()
+        : null;
     FieldSpec sourceField = FieldSpec.builder(String.class, "SOURCE", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
         .initializer("$S", spec.getSource())
         .build();
 
-    MethodSpec constructor = MethodSpec.constructorBuilder()
+    MethodSpec.Builder constructorBuilder = MethodSpec.constructorBuilder()
         .addModifiers(Modifier.PROTECTED)
-        .addParameter(String.class, "code")
+        .addParameter(String.class, "code");
+    if (includeHttpStatus) {
+      constructorBuilder.addParameter(int.class, "httpStatus");
+    }
+    constructorBuilder
         .addParameter(String.class, "descriptionTemplate")
         .addParameter(String.class, "detailTemplate")
         .addParameter(mapStringObject, "details")
@@ -94,8 +110,11 @@ public final class JavaGenerator {
         .addStatement("this.code = $T.requireNonNull(code, $S)", Objects.class, "code")
         .addStatement("this.descriptionTemplate = $T.requireNonNull(descriptionTemplate, $S)", Objects.class, "descriptionTemplate")
         .addStatement("this.detailTemplate = $T.requireNonNull(detailTemplate, $S)", Objects.class, "detailTemplate")
-        .addStatement("this.details = $T.copyOf($T.requireNonNull(details, $S))", Map.class, Objects.class, "details")
-        .build();
+        .addStatement("this.details = $T.copyOf($T.requireNonNull(details, $S))", Map.class, Objects.class, "details");
+    if (includeHttpStatus) {
+      constructorBuilder.addStatement("this.httpStatus = httpStatus");
+    }
+    MethodSpec constructor = constructorBuilder.build();
 
     MethodSpec getCode = MethodSpec.methodBuilder("code")
         .addModifiers(Modifier.PUBLIC)
@@ -142,6 +161,13 @@ public final class JavaGenerator {
         .returns(boolean.class)
         .addStatement("return false")
         .build();
+    MethodSpec httpStatus = includeHttpStatus
+        ? MethodSpec.methodBuilder("httpStatus")
+            .addModifiers(Modifier.PUBLIC)
+            .returns(int.class)
+            .addStatement("return httpStatus")
+            .build()
+        : null;
 
     MethodSpec coreValues = MethodSpec.methodBuilder("coreValues")
         .addModifiers(Modifier.PROTECTED, Modifier.ABSTRACT)
@@ -171,7 +197,7 @@ public final class JavaGenerator {
         .addStatement("return resolved")
         .build();
 
-    return TypeSpec.classBuilder(baseExceptionName(spec))
+    TypeSpec.Builder rootBuilder = TypeSpec.classBuilder(baseExceptionName(spec))
         .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
         .superclass(RuntimeException.class)
         .addField(sourceField)
@@ -188,11 +214,16 @@ public final class JavaGenerator {
         .addMethod(getParameters)
         .addMethod(getSource)
         .addMethod(getErrorInfo)
-        .addMethod(recoverable)
+        .addMethod(recoverable);
+    if (includeHttpStatus) {
+      rootBuilder.addField(httpStatusField);
+      rootBuilder.addMethod(httpStatus);
+    }
+    rootBuilder
         .addMethod(coreValues)
         .addMethod(renderValues)
-        .addMethod(renderTemplate)
-        .build();
+        .addMethod(renderTemplate);
+    return rootBuilder.build();
   }
 
   private TypeSpec buildCategoryException(EdlSpec spec,
@@ -237,26 +268,39 @@ public final class JavaGenerator {
           .build());
     }
 
-    MethodSpec constructor = MethodSpec.constructorBuilder()
+    MethodSpec.Builder constructorBuilder = MethodSpec.constructorBuilder()
         .addModifiers(Modifier.PROTECTED)
-        .addParameter(String.class, "errorCode")
+        .addParameter(String.class, "errorCode");
+    if (includeHttpStatus) {
+      constructorBuilder.addParameter(int.class, "httpStatus");
+    }
+    constructorBuilder
         .addParameter(String.class, "descriptionTemplate")
         .addParameter(String.class, "detailTemplate")
         .addParameter(mapStringObject, "details")
-        .addParameter(Throwable.class, "cause")
-        .addStatement("super(CODE_PREFIX + $T.requireNonNull(errorCode, $S), descriptionTemplate, detailTemplate, details, cause)",
-            Objects.class, "errorCode")
-        .build();
-    MethodSpec.Builder constructorBuilder = constructor.toBuilder();
+        .addParameter(Throwable.class, "cause");
+    if (includeHttpStatus) {
+      constructorBuilder.addStatement(
+          "super(CODE_PREFIX + $T.requireNonNull(errorCode, $S), httpStatus, descriptionTemplate, detailTemplate, details, cause)",
+          Objects.class, "errorCode");
+    } else {
+      constructorBuilder.addStatement(
+          "super(CODE_PREFIX + $T.requireNonNull(errorCode, $S), descriptionTemplate, detailTemplate, details, cause)",
+          Objects.class, "errorCode");
+    }
     for (Map.Entry<String, String> entry : customCoreParams) {
       TypeName typeName = parseTypeName(entry.getValue());
       constructorBuilder.addParameter(typeName, entry.getKey());
       constructorBuilder.addStatement("this.$L = $L", entry.getKey(), entry.getKey());
     }
-    constructor = constructorBuilder.build();
+    MethodSpec constructor = constructorBuilder.build();
     type.addMethod(constructor);
 
-    if (category.getHttpStatus() != null) {
+    if (includeHttpStatus) {
+      type.addField(FieldSpec.builder(int.class, "HTTP_STATUS", Modifier.PROTECTED, Modifier.STATIC, Modifier.FINAL)
+          .initializer("$L", category.getHttpStatus())
+          .build());
+    } else if (category.getHttpStatus() != null) {
       type.addMethod(MethodSpec.methodBuilder("httpStatus")
           .addModifiers(Modifier.PUBLIC)
           .returns(int.class)
@@ -324,6 +368,19 @@ public final class JavaGenerator {
         .initializer("$L", error.isRecoverable())
         .build());
 
+    if (includeHttpStatus && error.getHttpStatus() != null) {
+      type.addField(FieldSpec.builder(int.class, "HTTP_STATUS", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+          .initializer("$L", error.getHttpStatus())
+          .build());
+    } else if (!includeHttpStatus && error.getHttpStatus() != null) {
+      type.addMethod(MethodSpec.methodBuilder("httpStatus")
+          .addModifiers(Modifier.PUBLIC)
+          .addAnnotation(Override.class)
+          .returns(int.class)
+          .addStatement("return $L", error.getHttpStatus())
+          .build());
+    }
+
     List<Map.Entry<String, String>> customCoreParams = new ArrayList<>();
     for (Map.Entry<String, String> entry : category.getParams().entrySet()) {
       if (!DERIVED_PARAMS.contains(entry.getKey())) {
@@ -380,8 +437,13 @@ public final class JavaGenerator {
     ctor.addParameter(Throwable.class, "cause");
     String coreArgs = String.join(", ", coreParamNames);
     String extra = coreArgs.isEmpty() ? "" : ", " + coreArgs;
-    ctor.addStatement("super(ERROR_CODE, DESCRIPTION_TEMPLATE, DETAIL_TEMPLATE, $T.requireNonNull(details, $S), cause$L)",
-        Objects.class, "details", extra);
+    if (includeHttpStatus) {
+      ctor.addStatement("super(ERROR_CODE, $L, DESCRIPTION_TEMPLATE, DETAIL_TEMPLATE, $T.requireNonNull(details, $S), cause$L)",
+          "HTTP_STATUS", Objects.class, "details", extra);
+    } else {
+      ctor.addStatement("super(ERROR_CODE, DESCRIPTION_TEMPLATE, DETAIL_TEMPLATE, $T.requireNonNull(details, $S), cause$L)",
+          Objects.class, "details", extra);
+    }
     Set<String> coreParamNameSet = new LinkedHashSet<>(coreParamNames);
     for (ParameterSpec param : params) {
       if (!coreParamNameSet.contains(param.name)) {
@@ -666,7 +728,7 @@ public final class JavaGenerator {
             .endControlFlow();
       }
     }
-    methodBuilder.addStatement("return $T.status(500).body(body)", responseEntity);
+    methodBuilder.addStatement("return $T.status(exception.httpStatus()).body(body)", responseEntity);
     type.addMethod(methodBuilder.build());
 
     type.addMethod(MethodSpec.methodBuilder("toJson")

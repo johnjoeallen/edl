@@ -32,6 +32,7 @@ Error fields:
 - `required` optional map of `name` to Java type string
 - `optional` optional list of param names (defaults to `String`)
 - `recoverable` optional boolean, default false
+- `httpStatus` optional int to override the category `httpStatus`
 - `response` optional map of core field name to response field name
 
 ## 🧪 YAML Examples
@@ -126,7 +127,7 @@ The `deployment/` folder includes helper scripts for Maven deploy workflows:
 See `deployment/README.md` for full usage.
 
 ## 🧩 Spring Handler Generation
-Enable the Spring handler to generate a `@RestControllerAdvice` in the same package as the exceptions. The handler catches the base exception type and returns status 500. It uses Jackson `ObjectMapper`, so include `jackson-databind` at runtime.
+Enable the Spring handler to generate a `@RestControllerAdvice` in the same package as the exceptions. The handler catches the base exception type and returns the `httpStatus` configured on the category (or the error override if provided). When Spring handler generation is enabled, base classes include an `httpStatus` field that is passed through constructors. It uses Jackson `ObjectMapper`, so include `jackson-databind` at runtime.
 
 ```xml
 <configuration>

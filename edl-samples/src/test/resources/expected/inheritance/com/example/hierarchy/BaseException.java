@@ -11,13 +11,11 @@ import java.util.Objects;
 public abstract class BaseException extends HierarchyException {
   private static final String CODE_PREFIX = "BASE";
 
-  protected BaseException(String errorCode, String descriptionTemplate, String detailTemplate,
-      Map<String, Object> details, Throwable cause) {
-    super(CODE_PREFIX + Objects.requireNonNull(errorCode, "errorCode"), descriptionTemplate, detailTemplate, details, cause);
-  }
+  protected static final int HTTP_STATUS = 500;
 
-  public int httpStatus() {
-    return 500;
+  protected BaseException(String errorCode, int httpStatus, String descriptionTemplate,
+      String detailTemplate, Map<String, Object> details, Throwable cause) {
+    super(CODE_PREFIX + Objects.requireNonNull(errorCode, "errorCode"), httpStatus, descriptionTemplate, detailTemplate, details, cause);
   }
 
   @Override

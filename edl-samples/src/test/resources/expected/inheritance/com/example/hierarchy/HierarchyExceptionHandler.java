@@ -34,7 +34,7 @@ public class HierarchyExceptionHandler {
     if (info.containsKey("recoverable")) {
       body.put("Recoverable", info.get("recoverable"));
     }
-    return ResponseEntity.status(500).body(body);
+    return ResponseEntity.status(exception.httpStatus()).body(body);
   }
 
   private static String toJson(Map<String, Object> details) {

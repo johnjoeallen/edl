@@ -23,7 +23,7 @@ public final class FooErrorException extends AuthException {
 
   private FooErrorException(String userId, String region, Map<String, Object> details,
       Throwable cause) {
-    super(ERROR_CODE, DESCRIPTION_TEMPLATE, DETAIL_TEMPLATE, Objects.requireNonNull(details, "details"), cause);
+    super(ERROR_CODE, HTTP_STATUS, DESCRIPTION_TEMPLATE, DETAIL_TEMPLATE, Objects.requireNonNull(details, "details"), cause);
     this.userId = userId;
     this.region = region;
   }

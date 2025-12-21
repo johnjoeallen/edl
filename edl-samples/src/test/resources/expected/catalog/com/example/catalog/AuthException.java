@@ -11,13 +11,11 @@ import java.util.Objects;
 public abstract class AuthException extends CatalogException {
   private static final String CODE_PREFIX = "AUTH";
 
-  protected AuthException(String errorCode, String descriptionTemplate, String detailTemplate,
-      Map<String, Object> details, Throwable cause) {
-    super(CODE_PREFIX + Objects.requireNonNull(errorCode, "errorCode"), descriptionTemplate, detailTemplate, details, cause);
-  }
+  protected static final int HTTP_STATUS = 401;
 
-  public int httpStatus() {
-    return 401;
+  protected AuthException(String errorCode, int httpStatus, String descriptionTemplate,
+      String detailTemplate, Map<String, Object> details, Throwable cause) {
+    super(CODE_PREFIX + Objects.requireNonNull(errorCode, "errorCode"), httpStatus, descriptionTemplate, detailTemplate, details, cause);
   }
 
   @Override

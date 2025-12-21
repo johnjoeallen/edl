@@ -228,7 +228,7 @@ The `deployment/` folder contains a small, self-contained Maven deploy helper:
 See `deployment/README.md` for full usage and examples.
 
 ## 🌱 Spring Handler Generation
-Enable the Spring handler to generate a `@RestControllerAdvice` in the same package. The handler catches the base exception and returns a response built from your `response` mapping (for example `source`, `code`, `description`, `details`, `recoverable`), where `details` is serialized to JSON. It uses Jackson `ObjectMapper`, so include `jackson-databind` at runtime. When this is enabled, every category must define `httpStatus`.
+Enable the Spring handler to generate a `@RestControllerAdvice` in the same package. The handler catches the base exception and returns the `httpStatus` configured on the category (or the error override if provided), with a response built from your `response` mapping (for example `source`, `code`, `description`, `details`, `recoverable`), where `details` is serialized to JSON. When Spring handler generation is enabled, the generated base classes carry an `httpStatus` field and pass it through constructors. It uses Jackson `ObjectMapper`, so include `jackson-databind` at runtime. When this is enabled, every category must define `httpStatus`.
 
 ## 📖 Developer Guide
 See `DEV_GUIDE.md` for YAML examples, Maven usage, and generated exception usage.

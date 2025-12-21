@@ -20,7 +20,7 @@ public final class InvalidEmailException extends ValidationException {
   private final String email;
 
   private InvalidEmailException(String email, Map<String, Object> details, Throwable cause) {
-    super(ERROR_CODE, DESCRIPTION_TEMPLATE, DETAIL_TEMPLATE, Objects.requireNonNull(details, "details"), cause);
+    super(ERROR_CODE, HTTP_STATUS, DESCRIPTION_TEMPLATE, DETAIL_TEMPLATE, Objects.requireNonNull(details, "details"), cause);
     this.email = email;
   }
 
