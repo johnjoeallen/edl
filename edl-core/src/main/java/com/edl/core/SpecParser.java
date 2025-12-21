@@ -18,21 +18,25 @@ public final class SpecParser {
 
     LinkedHashMap<String, Object> map = toLinkedMap(rawMap, diagnostics, file, marks, "");
     String packageName = readString(map, diagnostics, file, marks, "package", true);
-    String rootException = readString(map, diagnostics, file, marks, "rootException", true);
+    String baseException = readString(map, diagnostics, file, marks, "baseException", true);
+    if (map.containsKey("rootException")) {
+      diagnostics.add(diagnostic(DiagnosticSeverity.ERROR,
+          "Use 'baseException' instead of 'rootException'", "rootException", file, marks));
+    }
     String source = readString(map, diagnostics, file, marks, "source", true);
     Map<String, Object> options = readMap(map, diagnostics, file, marks, "options", false);
     LinkedHashMap<String, String> responseFields = readStringMap(map, diagnostics, file, marks, "response", false);
     LinkedHashMap<String, CategoryDef> categories = readCategories(map, diagnostics, file, marks);
     LinkedHashMap<String, ErrorDef> errors = readErrors(map, diagnostics, file, marks);
 
-    if (packageName == null || rootException == null || source == null || categories == null || errors == null) {
+    if (packageName == null || baseException == null || source == null || categories == null || errors == null) {
       return new ParseResult(null, diagnostics);
     }
 
     if (responseFields == null) {
       responseFields = defaultResponseFields();
     }
-    EdlSpec spec = new EdlSpec(packageName, rootException, source, options, responseFields, categories, errors);
+    EdlSpec spec = new EdlSpec(packageName, baseException, source, options, responseFields, categories, errors);
     return new ParseResult(spec, diagnostics);
   }
 
@@ -104,7 +108,23 @@ public final class SpecParser {
       Map<String, Object> fixed = readMap(errorMap, diagnostics, file, marks, path + ".fixed", true);
       Object codeValue = fixed == null ? null : fixed.get("code");
       String description = fixed == null ? null : readString(fixed, diagnostics, file, marks, path + ".fixed.description", true);
-      String detail = fixed == null ? null : readString(fixed, diagnostics, file, marks, path + ".fixed.detail", true);
+      String detail = null;
+      if (fixed != null) {
+        boolean hasDetail = fixed.containsKey("detail");
+        boolean hasDetails = fixed.containsKey("details");
+        if (hasDetail && hasDetails) {
+          diagnostics.add(diagnostic(DiagnosticSeverity.ERROR,
+              "Use either 'detail' or 'details', not both", path + ".fixed", file, marks));
+        }
+        if (hasDetail) {
+          detail = readString(fixed, diagnostics, file, marks, path + ".fixed.detail", true);
+        } else if (hasDetails) {
+          detail = readString(fixed, diagnostics, file, marks, path + ".fixed.details", true);
+        } else {
+          diagnostics.add(diagnostic(DiagnosticSeverity.ERROR,
+              "Missing required key 'detail' or 'details'", path + ".fixed.detail", file, marks));
+        }
+      }
       LinkedHashMap<String, String> requiredParams = readStringMap(errorMap, diagnostics, file, marks, path + ".required", false);
       LinkedHashMap<String, String> optionalParams = readStringMapOrList(errorMap, diagnostics, file, marks, path + ".optional", false);
       Boolean recoverable = readBoolean(errorMap, diagnostics, file, marks, path + ".recoverable", false);

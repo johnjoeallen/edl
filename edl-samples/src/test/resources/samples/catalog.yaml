@@ -1,5 +1,5 @@
 package: com.example.catalog
-rootException: Catalog
+baseException: Catalog
 source: catalog-service
 categories:
   Auth:
@@ -9,7 +9,7 @@ categories:
       source: String
       code: String
       description: String
-      detail: String
+      details: String
 
 errors:
   fooError:
@@ -17,8 +17,14 @@ errors:
     fixed:
       code: 1
       description: "Userid invalid {userId}"
-      detail: "Userid {userId} does not exist"
+      details: "Userid {userId} does not exist"
     required: # additional values  for this exception, maybe we just assume all {} in any member are required
       userId: String
     optional:
       - region
+response:
+  source: Source
+  code: ReasonCode
+  description: Description
+  details: Details
+  recoverable: Recoverable

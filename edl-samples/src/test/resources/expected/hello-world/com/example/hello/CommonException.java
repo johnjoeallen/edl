@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public abstract class CommonException extends HelloRootException {
+public abstract class CommonException extends HelloException {
   private static final String CODE_PREFIX = "CM";
 
   protected CommonException(String errorCode, String descriptionTemplate, String detailTemplate,
@@ -26,7 +26,7 @@ public abstract class CommonException extends HelloRootException {
     values.put("source", source());
     values.put("code", code());
     values.put("description", description());
-    values.put("detail", detail());
+    values.put("details", details());
     return Map.copyOf(values);
   }
 }

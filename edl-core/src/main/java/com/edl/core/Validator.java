@@ -34,16 +34,16 @@ public final class Validator {
   }
 
   private void validateNames(EdlSpec spec, List<Diagnostic> diagnostics, String file, Map<String, Mark> marks) {
-    String rootName = spec.getRootException();
-    if (rootName != null) {
-      if (rootName.endsWith("Exception")) {
+    String baseName = spec.getBaseException();
+    if (baseName != null) {
+      if (baseName.endsWith("Exception")) {
         diagnostics.add(diagnostic(DiagnosticSeverity.ERROR,
-            "rootException should not include the 'Exception' suffix",
-            "rootException", file, marks));
+            "baseException should not include the 'Exception' suffix",
+            "baseException", file, marks));
       }
-      if (!CATEGORY_PATTERN.matcher(rootName).matches()) {
+      if (!CATEGORY_PATTERN.matcher(baseName).matches()) {
         diagnostics.add(diagnostic(DiagnosticSeverity.ERROR,
-            "rootException must be PascalCase", "rootException", file, marks));
+            "baseException must be PascalCase", "baseException", file, marks));
       }
     }
     for (String categoryName : spec.getCategories().keySet()) {

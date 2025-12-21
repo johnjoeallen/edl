@@ -20,22 +20,19 @@ public class HierarchyExceptionHandler {
     Map<String, Object> info = exception.errorInfo();
     Map<String, Object> body = new LinkedHashMap<>();
     if (info.containsKey("source")) {
-      body.put("source", info.get("source"));
+      body.put("Source", info.get("source"));
     }
     if (info.containsKey("code")) {
-      body.put("code", info.get("code"));
+      body.put("ReasonCode", info.get("code"));
     }
     if (info.containsKey("description")) {
-      body.put("description", info.get("description"));
-    }
-    if (info.containsKey("detail")) {
-      body.put("detail", info.get("detail"));
+      body.put("Description", info.get("description"));
     }
     if (info.containsKey("details")) {
-      body.put("details", toJson((Map<String, Object>) info.get("details")));
+      body.put("Details", toJson((Map<String, Object>) info.get("details")));
     }
     if (info.containsKey("recoverable")) {
-      body.put("recoverable", info.get("recoverable"));
+      body.put("Recoverable", info.get("recoverable"));
     }
     return ResponseEntity.status(500).body(body);
   }

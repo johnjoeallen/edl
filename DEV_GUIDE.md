@@ -6,7 +6,7 @@ This project compiles EDL YAML into Java exception hierarchies and provides a Ma
 ## 🧾 YAML Format
 Top level keys:
 - `package` string
-- `rootException` string
+- `baseException` string
 - `source` string
 - `options` optional map
 - `categories` map
@@ -20,15 +20,15 @@ Category fields:
 - `abstract` optional boolean, default true
 - `params` optional map of core param names to Java type strings
 
-Root exception name:
-- `rootException` should be PascalCase and must not include the `Exception` suffix. The generator appends it automatically.
+Base exception name:
+- `baseException` should be PascalCase and must not include the `Exception` suffix. The generator appends it automatically.
 
 Error fields:
 - `category` required string
 - `fixed` required map
   - `code` required number or string, normalized to 4 digits
   - `description` required string with `{placeholders}`
-  - `detail` required string with `{placeholders}`
+  - `detail` or `details` required string with `{placeholders}`
 - `required` optional map of `name` to Java type string
 - `optional` optional list of param names (defaults to `String`)
 - `recoverable` optional boolean, default false
@@ -38,7 +38,7 @@ Error fields:
 Small hello world:
 ```yaml
 package: com.example.hello
-rootException: HelloRoot
+baseException: Hello
 source: hello-service
 categories:
   Common:
@@ -48,14 +48,14 @@ categories:
       source: String
       code: String
       description: String
-      detail: String
+      details: String
 errors:
   helloWorld:
     category: Common
     fixed:
       code: 1
       description: "Hello {name}"
-      detail: "Hello detail {name}"
+      details: "Hello detail {name}"
     required:
       name: String
 ```
@@ -63,7 +63,7 @@ errors:
 Recoverable error with extra params:
 ```yaml
 package: com.example.payments
-rootException: Payments
+baseException: Payments
 source: payments-service
 categories:
   Billing:
@@ -74,25 +74,24 @@ categories:
       source: String
       code: String
       description: String
-      detail: String
+      details: String
 errors:
   paymentDeclined:
     category: Billing
     fixed:
       code: 5
       description: "Payment declined {paymentId}"
-      detail: "Payment declined {paymentId} detail"
+      details: "Payment declined {paymentId} detail"
     required:
       paymentId: String
       reason: String
     recoverable: true
 response:
-  source: source
-  code: reasonCode
-  description: description
-  detail: detail
-  recoverable: recoverable
-  details: detailsJson
+  source: Source
+  code: ReasonCode
+  description: Description
+  details: Details
+  recoverable: Recoverable
 ```
 
 ## 🔌 Maven Plugin Usage
@@ -109,7 +108,7 @@ response:
     </execution>
   </executions>
   <configuration>
-    <specFile>${project.basedir}/src/main/resources/edl.yml</specFile>
+    <specFile>${project.basedir}/src/main/resources/edl.yaml</specFile>
     <outputDirectory>${project.build.directory}/generated-sources/edl</outputDirectory>
     <failOnWarnings>false</failOnWarnings>
     <generateDocs>false</generateDocs>
@@ -118,8 +117,16 @@ response:
 </plugin>
 ```
 
+## 🚀 Deployment Scripts
+The `deployment/` folder includes helper scripts for Maven deploy workflows:
+- `deployment/deploy` detects snapshot vs release and runs `mvn clean deploy`.
+- `deployment/provision-deploy` generates `~/.m2/<config>-deploy.xml` from `deployment/deploy-template.xml`.
+- `deployment/.excludes` lists modules to skip.
+
+See `deployment/README.md` for full usage.
+
 ## 🧩 Spring Handler Generation
-Enable the Spring handler to generate a `@RestControllerAdvice` in the same package as the exceptions. The handler catches the root exception type and returns status 500. It uses Jackson `ObjectMapper`, so include `jackson-databind` at runtime.
+Enable the Spring handler to generate a `@RestControllerAdvice` in the same package as the exceptions. The handler catches the base exception type and returns status 500. It uses Jackson `ObjectMapper`, so include `jackson-databind` at runtime.
 
 ```xml
 <configuration>
@@ -127,7 +134,7 @@ Enable the Spring handler to generate a `@RestControllerAdvice` in the same pack
 </configuration>
 ```
 
-The response map contains `source`, `code`, `description`, `detail`, `recoverable`, and `details` where `details` is a JSON string. When handler generation is enabled, every category must define `httpStatus`.
+The response map is built from your `response` mapping (for example `source`, `code`, `description`, `details`, `recoverable`) where `details` is a JSON string. When handler generation is enabled, every category must define `httpStatus`.
 
 ## ☕ Using Generated Exceptions
 ```java

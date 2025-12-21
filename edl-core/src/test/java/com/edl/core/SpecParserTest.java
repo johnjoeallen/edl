@@ -14,7 +14,7 @@ public class SpecParserTest {
   @Test
   void parsesAndNormalizesCode() throws Exception {
     String yaml = "package: com.example\n"
-        + "rootException: RootEdl\n"
+        + "baseException: RootEdl\n"
         + "source: sample-service\n"
         + "categories:\n"
         + "  Validation:\n"
@@ -29,7 +29,7 @@ public class SpecParserTest {
         + "    required:\n"
         + "      field: String\n";
 
-    Path temp = Files.createTempFile("edl", ".yml");
+    Path temp = Files.createTempFile("edl", ".yaml");
     Files.writeString(temp, yaml);
     YamlLoader loader = new YamlLoader();
     YamlDocument document = loader.load(temp);
@@ -46,7 +46,7 @@ public class SpecParserTest {
   @Test
   void detectsUnknownCategory() throws Exception {
     String yaml = "package: com.example\n"
-        + "rootException: RootEdl\n"
+        + "baseException: RootEdl\n"
         + "source: sample-service\n"
         + "categories:\n"
         + "  Validation:\n"
@@ -61,7 +61,7 @@ public class SpecParserTest {
         + "    required:\n"
         + "      id: String\n";
 
-    Path temp = Files.createTempFile("edl", ".yml");
+    Path temp = Files.createTempFile("edl", ".yaml");
     Files.writeString(temp, yaml);
 
     YamlLoader loader = new YamlLoader();
@@ -77,7 +77,7 @@ public class SpecParserTest {
   @Test
   void detectsMissingMessageParam() throws Exception {
     String yaml = "package: com.example\n"
-        + "rootException: RootEdl\n"
+        + "baseException: RootEdl\n"
         + "source: sample-service\n"
         + "categories:\n"
         + "  Validation:\n"
@@ -93,7 +93,7 @@ public class SpecParserTest {
         + "      field: String\n"
         + "      extra: String\n";
 
-    Path temp = Files.createTempFile("edl", ".yml");
+    Path temp = Files.createTempFile("edl", ".yaml");
     Files.writeString(temp, yaml);
 
     YamlLoader loader = new YamlLoader();

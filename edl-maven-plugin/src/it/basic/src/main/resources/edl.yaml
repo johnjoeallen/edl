@@ -1,5 +1,5 @@
 package: com.example.edl
-rootException: ExampleEdl
+baseException: ExampleEdl
 source: example-service
 categories:
   Validation:

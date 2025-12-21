@@ -1,5 +1,5 @@
 package: com.example.hierarchy
-rootException: Hierarchy
+baseException: Hierarchy
 source: hierarchy-service
 categories:
   Base:
@@ -9,7 +9,7 @@ categories:
       source: String
       code: String
       description: String
-      detail: String
+      details: String
   Validation:
     parent: Base
     codePrefix: VAL
@@ -18,7 +18,7 @@ categories:
       source: String
       code: String
       description: String
-      detail: String
+      details: String
   Input:
     parent: Validation
     codePrefix: IN
@@ -28,14 +28,14 @@ categories:
       source: String
       code: String
       description: String
-      detail: String
+      details: String
 errors:
   invalidEmail:
     category: Validation
     fixed:
       code: "12"
       description: "Invalid email {email}"
-      detail: "Invalid email {email} detail"
+      details: "Invalid email {email} detail"
     required:
       email: String
   missingField:
@@ -43,6 +43,12 @@ errors:
     fixed:
       code: 99
       description: "Missing {field}"
-      detail: "Missing {field} detail"
+      details: "Missing {field} detail"
     required:
       field: String
+response:
+  source: Source
+  code: ReasonCode
+  description: Description
+  details: Details
+  recoverable: Recoverable

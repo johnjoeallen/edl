@@ -30,7 +30,7 @@ public final class SamplesGenerator {
     EdlCompiler compiler = new EdlCompiler();
     try (Stream<Path> stream = Files.list(samplesDir)) {
       List<Path> specs = stream
-          .filter(path -> path.getFileName().toString().endsWith(".yml"))
+          .filter(path -> path.getFileName().toString().endsWith(".yaml"))
           .sorted(Comparator.comparing(path -> path.getFileName().toString()))
           .toList();
 

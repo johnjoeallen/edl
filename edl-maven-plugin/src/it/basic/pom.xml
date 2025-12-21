@@ -24,7 +24,7 @@
           </execution>
         </executions>
         <configuration>
-          <specFile>${project.basedir}/src/main/resources/edl.yml</specFile>
+          <specFile>${project.basedir}/src/main/resources/edl.yaml</specFile>
         </configuration>
       </plugin>
     </plugins>

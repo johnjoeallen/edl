@@ -1,5 +1,5 @@
 package: com.example.hello
-rootException: HelloRoot
+baseException: Hello
 source: hello-service
 categories:
   Common:
@@ -9,20 +9,19 @@ categories:
       source: String
       code: String
       description: String
-      detail: String
+      details: String
 errors:
   helloWorld:
     category: Common
     fixed:
       code: 1
       description: "Hello {name}"
-      detail: "Hello detail {name}"
+      details: "Hello detail {name}"
     required:
       name: String
 response:
-  source: source
-  code: reasonCode
-  description: message
-  detail: detail
-  recoverable: canRecover
-  details: detailsJson
+  source: Source
+  code: ReasonCode
+  description: Description
+  details: Details
+  recoverable: Recoverable

@@ -1,7 +1,7 @@
 # 📦 EDL Compiler and Maven Plugin
 
 ## 📚 Overview
-EDL turns a YAML Exception Definition Language spec into a clean Java exception hierarchy. It generates a root exception, category base classes, and concrete errors with stable formatting, strong typing, and deterministic output. Codes are composed as `<prefix><numericCode>` without a dash.
+EDL turns a YAML Exception Definition Language spec into a clean Java exception hierarchy. It generates a base exception, category base classes, and concrete errors with stable formatting, strong typing, and deterministic output. Codes are composed as `<prefix><numericCode>` without a dash.
 
 📦 Modules:
 - `edl-core` for parsing, validation, and Java generation
@@ -15,7 +15,7 @@ EDL turns a YAML Exception Definition Language spec into a clean Java exception 
 ## 🧾 YAML Spec Examples
 ```yaml
 package: com.example.hello
-rootException: HelloRoot
+baseException: Hello
 source: hello-service
 categories:
   Common:
@@ -25,28 +25,27 @@ categories:
       source: String
       code: String
       description: String
-      detail: String
+      details: String
 errors:
   helloWorld:
     category: Common
     fixed:
       code: 1
       description: "Hello {name}"
-      detail: "Hello detail {name}"
+      details: "Hello detail {name}"
     required:
       name: String
 response:
-  source: source
-  code: code
-  description: description
-  detail: detail
-  recoverable: recoverable
-  details: details
+  source: Source
+  code: ReasonCode
+  description: Description
+  details: Details
+  recoverable: Recoverable
 ```
 
 ```yaml
 package: com.example.hierarchy
-rootException: Hierarchy
+baseException: Hierarchy
 source: hierarchy-service
 categories:
   Base:
@@ -56,7 +55,7 @@ categories:
       source: String
       code: String
       description: String
-      detail: String
+      details: String
   Validation:
     parent: Base
     codePrefix: VAL
@@ -65,14 +64,14 @@ categories:
       source: String
       code: String
       description: String
-      detail: String
+      details: String
 errors:
   invalidEmail:
     category: Validation
     fixed:
       code: "12"
       description: "Invalid email {email}"
-      detail: "Invalid email {email} detail"
+      details: "Invalid email {email} detail"
     required:
       email: String
 ```
@@ -82,24 +81,23 @@ Use `response` to rename fields in the Spring handler response. Keys are the cor
 
 ```yaml
 response:
-  source: source
-  code: reasonCode
-  description: message
-  detail: detail
-  recoverable: canRecover
-  details: detailsJson
+  source: Source
+  code: ReasonCode
+  description: Description
+  details: Details
+  recoverable: Recoverable
 ```
 
 ## ☕ Generated Java Examples
 ```java
-public abstract class HelloRootException extends RuntimeException {
+public abstract class HelloException extends RuntimeException {
   private static final String SOURCE = "hello-service";
   private final String code;
   private final String descriptionTemplate;
   private final String detailTemplate;
   private final Map<String, Object> details;
 
-  protected HelloRootException(String code, String descriptionTemplate, String detailTemplate,
+  protected HelloException(String code, String descriptionTemplate, String detailTemplate,
       Map<String, Object> details, Throwable cause) {
     super(descriptionTemplate, cause);
     this.code = Objects.requireNonNull(code, "code");
@@ -212,7 +210,7 @@ public final class HelloWorldException extends CommonException {
     </execution>
   </executions>
   <configuration>
-    <specFile>${project.basedir}/src/main/resources/edl.yml</specFile>
+    <specFile>${project.basedir}/src/main/resources/edl.yaml</specFile>
     <outputDirectory>${project.build.directory}/generated-sources/edl</outputDirectory>
     <failOnWarnings>false</failOnWarnings>
     <generateDocs>false</generateDocs>
@@ -221,8 +219,16 @@ public final class HelloWorldException extends CommonException {
 </plugin>
 ```
 
+## 🚀 Deployment Scripts
+The `deployment/` folder contains a small, self-contained Maven deploy helper:
+- `deployment/deploy` runs snapshot vs release deployments by inspecting your `pom.xml`.
+- `deployment/provision-deploy` creates a `~/.m2/<config>-deploy.xml` from `deployment/deploy-template.xml`.
+- `deployment/.excludes` lists modules to skip during deploys.
+
+See `deployment/README.md` for full usage and examples.
+
 ## 🌱 Spring Handler Generation
-Enable the Spring handler to generate a `@RestControllerAdvice` in the same package. The handler catches the root exception and returns a response with `source`, `code`, `description`, `detail`, `recoverable`, and `details` where `details` is a JSON string. It uses Jackson `ObjectMapper`, so include `jackson-databind` at runtime. When this is enabled, every category must define `httpStatus`.
+Enable the Spring handler to generate a `@RestControllerAdvice` in the same package. The handler catches the base exception and returns a response built from your `response` mapping (for example `source`, `code`, `description`, `details`, `recoverable`), where `details` is serialized to JSON. It uses Jackson `ObjectMapper`, so include `jackson-databind` at runtime. When this is enabled, every category must define `httpStatus`.
 
 ## 📖 Developer Guide
 See `DEV_GUIDE.md` for YAML examples, Maven usage, and generated exception usage.
@@ -232,4 +238,4 @@ See `DEV_GUIDE.md` for YAML examples, Maven usage, and generated exception usage
 - Check error messages for a YAML key path like `errors.userNotFound.fixed.code`
 - Verify category prefixes are unique across the spec
 - Confirm every description/detail placeholder has a matching param and vice versa
- - Root exception names must be PascalCase and omit the `Exception` suffix
+- Base exception names must be PascalCase and omit the `Exception` suffix

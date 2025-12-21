@@ -32,7 +32,7 @@ public class GeneratedExceptionRuntimeTest {
   @Test
   void generatedExceptionExposesExpectedValues() throws Exception {
     String yaml = "package: com.example.hello\n"
-        + "rootException: HelloRoot\n"
+        + "baseException: Hello\n"
         + "source: hello-service\n"
         + "categories:\n"
         + "  Common:\n"
@@ -43,11 +43,11 @@ public class GeneratedExceptionRuntimeTest {
         + "    fixed:\n"
         + "      code: 1\n"
         + "      description: \"Hello {name}\"\n"
-        + "      detail: \"Hello detail {name}\"\n"
+        + "      details: \"Hello detail {name}\"\n"
         + "    required:\n"
         + "      name: String\n";
 
-    Path spec = Files.createTempFile("edl-test", ".yml");
+    Path spec = Files.createTempFile("edl-test", ".yaml");
     Files.writeString(spec, yaml, StandardCharsets.UTF_8);
     Path outputDir = Files.createTempDirectory("edl-generated");
 

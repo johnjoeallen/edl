@@ -5,7 +5,7 @@ import java.util.Map;
 
 public final class EdlSpec {
   private final String packageName;
-  private final String rootException;
+  private final String baseException;
   private final String source;
   private final Map<String, Object> options;
   private final LinkedHashMap<String, String> responseFields;
@@ -13,14 +13,14 @@ public final class EdlSpec {
   private final LinkedHashMap<String, ErrorDef> errors;
 
   public EdlSpec(String packageName,
-                 String rootException,
+                 String baseException,
                  String source,
                  Map<String, Object> options,
                  LinkedHashMap<String, String> responseFields,
                  LinkedHashMap<String, CategoryDef> categories,
                  LinkedHashMap<String, ErrorDef> errors) {
     this.packageName = packageName;
-    this.rootException = rootException;
+    this.baseException = baseException;
     this.source = source;
     this.options = options;
     this.responseFields = responseFields;
@@ -32,8 +32,8 @@ public final class EdlSpec {
     return packageName;
   }
 
-  public String getRootException() {
-    return rootException;
+  public String getBaseException() {
+    return baseException;
   }
 
   public String getSource() {

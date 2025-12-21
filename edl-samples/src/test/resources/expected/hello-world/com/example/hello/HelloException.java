@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public abstract class HelloRootException extends RuntimeException {
+public abstract class HelloException extends RuntimeException {
   private static final String SOURCE = "hello-service";
 
   private final String code;
@@ -19,7 +19,7 @@ public abstract class HelloRootException extends RuntimeException {
 
   private final Map<String, Object> details;
 
-  protected HelloRootException(String code, String descriptionTemplate, String detailTemplate,
+  protected HelloException(String code, String descriptionTemplate, String detailTemplate,
       Map<String, Object> details, Throwable cause) {
     super(descriptionTemplate, cause);
     this.code = Objects.requireNonNull(code, "code");

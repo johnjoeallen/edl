@@ -37,7 +37,7 @@ public class GoldenFileTest {
   }
 
   private void assertGolden(String sampleName) throws Exception {
-    Path sample = Path.of("src", "test", "resources", "samples", sampleName + ".yml");
+    Path sample = Path.of("src", "test", "resources", "samples", sampleName + ".yaml");
     Path expectedDir = Path.of("src", "test", "resources", "expected", sampleName);
     Path outputDir = Files.createTempDirectory("edl-samples");
 
