@@ -76,7 +76,7 @@ public final class EdlCompiler {
         + "## \uD83E\uDDF1 Package\n\n"
         + "`" + spec.getPackageName() + "`\n\n"
         + "## \uD83E\uDDF1 Root Exception\n\n"
-        + "`" + spec.getRootException() + "`\n\n"
+        + "`" + spec.getRootException() + "Exception`\n\n"
         + "## \uD83E\uDDF1 Source\n\n"
         + "`" + spec.getSource() + "`\n\n"
         + "## \uD83E\uDDF1 Categories\n\n"

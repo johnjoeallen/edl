@@ -15,7 +15,7 @@ EDL turns a YAML Exception Definition Language spec into a clean Java exception 
 ## 🧾 YAML Spec Examples
 ```yaml
 package: com.example.hello
-rootException: HelloRootException
+rootException: HelloRoot
 source: hello-service
 categories:
   Common:
@@ -46,7 +46,7 @@ response:
 
 ```yaml
 package: com.example.hierarchy
-rootException: HierarchyException
+rootException: Hierarchy
 source: hierarchy-service
 categories:
   Base:
@@ -232,3 +232,4 @@ See `DEV_GUIDE.md` for YAML examples, Maven usage, and generated exception usage
 - Check error messages for a YAML key path like `errors.userNotFound.fixed.code`
 - Verify category prefixes are unique across the spec
 - Confirm every description/detail placeholder has a matching param and vice versa
+ - Root exception names must be PascalCase and omit the `Exception` suffix

@@ -171,7 +171,7 @@ public final class JavaGenerator {
         .addStatement("return resolved")
         .build();
 
-    return TypeSpec.classBuilder(spec.getRootException())
+    return TypeSpec.classBuilder(rootExceptionName(spec))
         .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
         .superclass(RuntimeException.class)
         .addField(sourceField)
@@ -198,7 +198,7 @@ public final class JavaGenerator {
   private TypeSpec buildCategoryException(EdlSpec spec,
                                           CategoryDef category,
                                           Map<String, ClassName> categoryTypes) {
-    ClassName rootClass = ClassName.get(spec.getPackageName(), spec.getRootException());
+    ClassName rootClass = ClassName.get(spec.getPackageName(), rootExceptionName(spec));
     ClassName mapType = ClassName.get(Map.class);
     TypeName mapStringObject = ParameterizedTypeName.get(mapType, ClassName.get(String.class), ClassName.get(Object.class));
 
@@ -635,7 +635,7 @@ public final class JavaGenerator {
     ClassName mapType = ClassName.get(Map.class);
     TypeName mapStringObject = ParameterizedTypeName.get(mapType, ClassName.get(String.class), ClassName.get(Object.class));
 
-    TypeSpec.Builder type = TypeSpec.classBuilder(spec.getRootException() + "Handler")
+    TypeSpec.Builder type = TypeSpec.classBuilder(rootExceptionName(spec) + "Handler")
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(restControllerAdvice);
 
@@ -643,8 +643,8 @@ public final class JavaGenerator {
         .initializer("new $T()", objectMapper)
         .build());
 
-    ClassName rootType = ClassName.get(spec.getPackageName(), spec.getRootException());
-    MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("handle" + spec.getRootException())
+    ClassName rootType = ClassName.get(spec.getPackageName(), rootExceptionName(spec));
+    MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("handle" + rootExceptionName(spec))
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(AnnotationSpec.builder(exceptionHandler)
             .addMember("value", "$T.class", rootType)
@@ -681,5 +681,9 @@ public final class JavaGenerator {
         .build());
 
     return type.build();
+  }
+
+  private String rootExceptionName(EdlSpec spec) {
+    return spec.getRootException() + "Exception";
   }
 }

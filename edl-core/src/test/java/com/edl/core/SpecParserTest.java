@@ -14,7 +14,7 @@ public class SpecParserTest {
   @Test
   void parsesAndNormalizesCode() throws Exception {
     String yaml = "package: com.example\n"
-        + "rootException: RootEdlException\n"
+        + "rootException: RootEdl\n"
         + "source: sample-service\n"
         + "categories:\n"
         + "  Validation:\n"
@@ -46,7 +46,7 @@ public class SpecParserTest {
   @Test
   void detectsUnknownCategory() throws Exception {
     String yaml = "package: com.example\n"
-        + "rootException: RootEdlException\n"
+        + "rootException: RootEdl\n"
         + "source: sample-service\n"
         + "categories:\n"
         + "  Validation:\n"
@@ -77,7 +77,7 @@ public class SpecParserTest {
   @Test
   void detectsMissingMessageParam() throws Exception {
     String yaml = "package: com.example\n"
-        + "rootException: RootEdlException\n"
+        + "rootException: RootEdl\n"
         + "source: sample-service\n"
         + "categories:\n"
         + "  Validation:\n"

@@ -20,6 +20,9 @@ Category fields:
 - `abstract` optional boolean, default true
 - `params` optional map of core param names to Java type strings
 
+Root exception name:
+- `rootException` should be PascalCase and must not include the `Exception` suffix. The generator appends it automatically.
+
 Error fields:
 - `category` required string
 - `fixed` required map
@@ -35,7 +38,7 @@ Error fields:
 Small hello world:
 ```yaml
 package: com.example.hello
-rootException: HelloRootException
+rootException: HelloRoot
 source: hello-service
 categories:
   Common:
@@ -60,7 +63,7 @@ errors:
 Recoverable error with extra params:
 ```yaml
 package: com.example.payments
-rootException: PaymentsException
+rootException: Payments
 source: payments-service
 categories:
   Billing:

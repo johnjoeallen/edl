@@ -1,5 +1,5 @@
 package: com.example.hello
-rootException: HelloRootException
+rootException: HelloRoot
 source: hello-service
 categories:
   Common:

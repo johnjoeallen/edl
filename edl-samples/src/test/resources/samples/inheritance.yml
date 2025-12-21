@@ -1,5 +1,5 @@
 package: com.example.hierarchy
-rootException: HierarchyException
+rootException: Hierarchy
 source: hierarchy-service
 categories:
   Base:

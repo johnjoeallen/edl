@@ -32,7 +32,7 @@ public class GeneratedExceptionRuntimeTest {
   @Test
   void generatedExceptionExposesExpectedValues() throws Exception {
     String yaml = "package: com.example.hello\n"
-        + "rootException: HelloRootException\n"
+        + "rootException: HelloRoot\n"
         + "source: hello-service\n"
         + "categories:\n"
         + "  Common:\n"
