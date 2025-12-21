@@ -21,6 +21,7 @@ public final class SpecParser {
     String rootException = readString(map, diagnostics, file, marks, "rootException", true);
     String source = readString(map, diagnostics, file, marks, "source", true);
     Map<String, Object> options = readMap(map, diagnostics, file, marks, "options", false);
+    LinkedHashMap<String, String> responseFields = readStringMap(map, diagnostics, file, marks, "response", false);
     LinkedHashMap<String, CategoryDef> categories = readCategories(map, diagnostics, file, marks);
     LinkedHashMap<String, ErrorDef> errors = readErrors(map, diagnostics, file, marks);
 
@@ -28,7 +29,10 @@ public final class SpecParser {
       return new ParseResult(null, diagnostics);
     }
 
-    EdlSpec spec = new EdlSpec(packageName, rootException, source, options, categories, errors);
+    if (responseFields == null) {
+      responseFields = defaultResponseFields();
+    }
+    EdlSpec spec = new EdlSpec(packageName, rootException, source, options, responseFields, categories, errors);
     return new ParseResult(spec, diagnostics);
   }
 
@@ -265,6 +269,16 @@ public final class SpecParser {
       }
     }
     return result;
+  }
+
+  private LinkedHashMap<String, String> defaultResponseFields() {
+    LinkedHashMap<String, String> defaults = new LinkedHashMap<>();
+    defaults.put("source", "source");
+    defaults.put("code", "code");
+    defaults.put("description", "description");
+    defaults.put("recoverable", "recoverable");
+    defaults.put("details", "details");
+    return defaults;
   }
 
   private List<String> readStringList(Map<String, Object> map,

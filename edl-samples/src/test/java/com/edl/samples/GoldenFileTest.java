@@ -42,7 +42,7 @@ public class GoldenFileTest {
     Path outputDir = Files.createTempDirectory("edl-samples");
 
     EdlCompiler compiler = new EdlCompiler();
-    CompilationResult result = compiler.compile(sample, outputDir, new CompilerOptions(false));
+    CompilationResult result = compiler.compile(sample, outputDir, new CompilerOptions(false, true));
 
     List<Diagnostic> errors = result.getDiagnostics().stream()
         .filter(d -> d.getSeverity() == DiagnosticSeverity.ERROR)

@@ -13,3 +13,9 @@ errors:
       name: String
     requiredParams:
       - name
+response:
+  source: source
+  code: reasonCode
+  description: description
+  recoverable: recoverable
+  details: detailsJson

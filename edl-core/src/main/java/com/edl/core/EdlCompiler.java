@@ -41,6 +41,9 @@ public final class EdlCompiler {
     if (options != null && options.isGenerateDocs()) {
       generatedFiles.add(writeDocs(spec, outputDirectory));
     }
+    if (options != null && options.isGenerateSpringHandler()) {
+      generatedFiles.add(generator.generateSpringHandler(spec, outputDirectory));
+    }
     return new CompilationResult(generatedFiles, diagnostics);
   }
 

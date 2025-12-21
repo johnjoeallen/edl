@@ -29,6 +29,9 @@ public final class GenerateExceptionsMojo extends AbstractMojo {
   @Parameter(property = "edl.generateDocs", defaultValue = "false")
   private boolean generateDocs;
 
+  @Parameter(property = "edl.generateSpringHandler", defaultValue = "false")
+  private boolean generateSpringHandler;
+
   @Parameter(defaultValue = "${project}", readonly = true, required = true)
   private MavenProject project;
 
@@ -41,7 +44,8 @@ public final class GenerateExceptionsMojo extends AbstractMojo {
     EdlCompiler compiler = new EdlCompiler();
     CompilationResult result;
     try {
-      result = compiler.compile(specFile.toPath(), outputDirectory.toPath(), new CompilerOptions(generateDocs));
+      result = compiler.compile(specFile.toPath(), outputDirectory.toPath(),
+          new CompilerOptions(generateDocs, generateSpringHandler));
     } catch (Exception ex) {
       throw new MojoExecutionException("Failed to compile EDL spec", ex);
     }

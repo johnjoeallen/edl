@@ -23,6 +23,7 @@ public final class Validator {
     validateCategories(spec, diagnostics, file, marks);
     validateErrors(spec, diagnostics, file, marks);
     validateMessageTemplates(spec, diagnostics, file, marks);
+    validateResponseFields(spec, diagnostics, file, marks);
     return new ValidationResult(diagnostics);
   }
 
@@ -103,6 +104,35 @@ public final class Validator {
               "Required param '" + required + "' is not declared in params",
               "errors." + error.getName() + ".requiredParams", file, marks));
         }
+      }
+    }
+  }
+
+  private void validateResponseFields(EdlSpec spec, List<Diagnostic> diagnostics, String file, Map<String, Mark> marks) {
+    Set<String> allowed = Set.of("source", "code", "description", "recoverable", "details");
+    Set<String> seenValues = new HashSet<>();
+    for (Map.Entry<String, String> entry : spec.getResponseFields().entrySet()) {
+      String key = entry.getKey();
+      String value = entry.getValue();
+      if (!allowed.contains(key)) {
+        diagnostics.add(diagnostic(DiagnosticSeverity.ERROR,
+            "Unknown response field '" + key + "'", "response." + key, file, marks));
+        continue;
+      }
+      if (value == null || value.trim().isEmpty()) {
+        diagnostics.add(diagnostic(DiagnosticSeverity.ERROR,
+            "Response field '" + key + "' must not be blank", "response." + key, file, marks));
+        continue;
+      }
+      if (!seenValues.add(value)) {
+        diagnostics.add(diagnostic(DiagnosticSeverity.ERROR,
+            "Response field value '" + value + "' is duplicated", "response." + key, file, marks));
+      }
+    }
+    for (String required : allowed) {
+      if (!spec.getResponseFields().containsKey(required)) {
+        diagnostics.add(diagnostic(DiagnosticSeverity.ERROR,
+            "Missing response field '" + required + "'", "response." + required, file, marks));
       }
     }
   }

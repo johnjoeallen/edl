@@ -37,7 +37,7 @@ public final class SamplesGenerator {
       for (Path spec : specs) {
         String name = stripExtension(spec.getFileName().toString());
         Path specOutput = outputDir.resolve(name);
-        CompilationResult result = compiler.compile(spec, specOutput, new CompilerOptions(false));
+        CompilationResult result = compiler.compile(spec, specOutput, new CompilerOptions(false, true));
         List<Diagnostic> errors = result.getDiagnostics().stream()
             .filter(diagnostic -> diagnostic.getSeverity() == DiagnosticSeverity.ERROR)
             .toList();

@@ -8,6 +8,7 @@ public final class EdlSpec {
   private final String rootException;
   private final String source;
   private final Map<String, Object> options;
+  private final LinkedHashMap<String, String> responseFields;
   private final LinkedHashMap<String, CategoryDef> categories;
   private final LinkedHashMap<String, ErrorDef> errors;
 
@@ -15,12 +16,14 @@ public final class EdlSpec {
                  String rootException,
                  String source,
                  Map<String, Object> options,
+                 LinkedHashMap<String, String> responseFields,
                  LinkedHashMap<String, CategoryDef> categories,
                  LinkedHashMap<String, ErrorDef> errors) {
     this.packageName = packageName;
     this.rootException = rootException;
     this.source = source;
     this.options = options;
+    this.responseFields = responseFields;
     this.categories = categories;
     this.errors = errors;
   }
@@ -39,6 +42,10 @@ public final class EdlSpec {
 
   public Map<String, Object> getOptions() {
     return options;
+  }
+
+  public LinkedHashMap<String, String> getResponseFields() {
+    return responseFields;
   }
 
   public LinkedHashMap<String, CategoryDef> getCategories() {

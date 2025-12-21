@@ -1,6 +1,7 @@
 package com.edl.core;
 
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
@@ -56,6 +57,13 @@ public final class JavaGenerator {
     }
 
     return generatedFiles;
+  }
+
+  public Path generateSpringHandler(EdlSpec spec, Path outputDirectory) throws IOException {
+    Path packageDir = outputDirectory.resolve(spec.getPackageName().replace('.', '/'));
+    Files.createDirectories(packageDir);
+    JavaFile handlerFile = JavaFile.builder(spec.getPackageName(), buildSpringHandler(spec)).indent("  ").build();
+    return writeIfChanged(packageDir, handlerFile);
   }
 
   private TypeSpec buildRootException(EdlSpec spec) {
@@ -264,6 +272,7 @@ public final class JavaGenerator {
         .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
 
     ClassName linkedHashMap = ClassName.get(LinkedHashMap.class);
+    ClassName objectMapper = ClassName.get("com.fasterxml.jackson.databind", "ObjectMapper");
     TypeName mapStringObject = ParameterizedTypeName.get(ClassName.get(Map.class), ClassName.get(String.class), ClassName.get(Object.class));
 
     List<TypeName> boxedTypes = new ArrayList<>();
@@ -482,5 +491,60 @@ public final class JavaGenerator {
     }
     Files.writeString(file, content, StandardCharsets.UTF_8);
     return file;
+  }
+
+  private TypeSpec buildSpringHandler(EdlSpec spec) {
+    ClassName restControllerAdvice = ClassName.get("org.springframework.web.bind.annotation", "RestControllerAdvice");
+    ClassName exceptionHandler = ClassName.get("org.springframework.web.bind.annotation", "ExceptionHandler");
+    ClassName responseEntity = ClassName.get("org.springframework.http", "ResponseEntity");
+    ClassName objectMapper = ClassName.get("com.fasterxml.jackson.databind", "ObjectMapper");
+    ClassName linkedHashMap = ClassName.get(LinkedHashMap.class);
+    ClassName mapType = ClassName.get(Map.class);
+    TypeName mapStringObject = ParameterizedTypeName.get(mapType, ClassName.get(String.class), ClassName.get(Object.class));
+
+    TypeSpec.Builder type = TypeSpec.classBuilder(spec.getRootException() + "Handler")
+        .addModifiers(Modifier.PUBLIC)
+        .addAnnotation(restControllerAdvice);
+
+    type.addField(FieldSpec.builder(objectMapper, "MAPPER", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+        .initializer("new $T()", objectMapper)
+        .build());
+
+    ClassName rootType = ClassName.get(spec.getPackageName(), spec.getRootException());
+    String sourceKey = spec.getResponseFields().get("source");
+    String codeKey = spec.getResponseFields().get("code");
+    String descriptionKey = spec.getResponseFields().get("description");
+    String recoverableKey = spec.getResponseFields().get("recoverable");
+    String detailsKey = spec.getResponseFields().get("details");
+
+    MethodSpec method = MethodSpec.methodBuilder("handle" + spec.getRootException())
+        .addModifiers(Modifier.PUBLIC)
+        .addAnnotation(AnnotationSpec.builder(exceptionHandler)
+            .addMember("value", "$T.class", rootType)
+            .build())
+        .addParameter(rootType, "exception")
+        .returns(ParameterizedTypeName.get(responseEntity, mapStringObject))
+        .addStatement("$T body = new $T<>()", mapStringObject, linkedHashMap)
+        .addStatement("body.put($S, exception.source())", sourceKey)
+        .addStatement("body.put($S, exception.code())", codeKey)
+        .addStatement("body.put($S, exception.errorInfo().get($S))", descriptionKey, "description")
+        .addStatement("body.put($S, exception.recoverable())", recoverableKey)
+        .addStatement("body.put($S, toJson(exception.details()))", detailsKey)
+        .addStatement("return $T.status(500).body(body)", responseEntity)
+        .build();
+    type.addMethod(method);
+
+    type.addMethod(MethodSpec.methodBuilder("toJson")
+        .addModifiers(Modifier.PRIVATE, Modifier.STATIC)
+        .returns(String.class)
+        .addParameter(mapStringObject, "details")
+        .beginControlFlow("try")
+        .addStatement("return MAPPER.writeValueAsString(details)")
+        .nextControlFlow("catch ($T ex)", Exception.class)
+        .addStatement("return $S", "{}")
+        .endControlFlow()
+        .build());
+
+    return type.build();
   }
 }

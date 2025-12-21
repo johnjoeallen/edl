@@ -52,7 +52,7 @@ public class GeneratedExceptionRuntimeTest {
     Path outputDir = Files.createTempDirectory("edl-generated");
 
     EdlCompiler compiler = new EdlCompiler();
-    CompilationResult result = compiler.compile(spec, outputDir, new CompilerOptions(false));
+    CompilationResult result = compiler.compile(spec, outputDir, new CompilerOptions(false, false));
     assertTrue(result.getDiagnostics().stream().noneMatch(d -> d.getSeverity() == DiagnosticSeverity.ERROR),
         formatDiagnostics(result.getDiagnostics()));
 

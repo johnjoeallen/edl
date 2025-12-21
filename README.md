@@ -1,7 +1,7 @@
 # 📦 EDL Compiler and Maven Plugin
 
 ## 📚 Overview
-EDL turns a YAML Exception Definition Language spec into a clean Java exception hierarchy. It generates a root exception, category base classes, and concrete errors with stable formatting, strong typing, and deterministic output.
+EDL turns a YAML Exception Definition Language spec into a clean Java exception hierarchy. It generates a root exception, category base classes, and concrete errors with stable formatting, strong typing, and deterministic output. Codes are composed as `<prefix><numericCode>` without a dash.
 
 📦 Modules:
 - `edl-core` for parsing, validation, and Java generation
@@ -29,6 +29,12 @@ errors:
       name: String
     requiredParams:
       - name
+response:
+  source: source
+  code: code
+  description: description
+  recoverable: recoverable
+  details: details
 ```
 
 ```yaml
@@ -52,6 +58,18 @@ errors:
       email: String
 ```
 
+## 🧾 Response Mapping
+Use `response` to rename fields in the Spring handler response. Keys are the core fields and values are the response field names.
+
+```yaml
+response:
+  source: source
+  code: reasonCode
+  description: description
+  recoverable: recoverable
+  details: detailsJson
+```
+
 ## ☕ Generated Java Examples
 ```java
 public abstract class HelloRootException extends RuntimeException {
@@ -66,6 +84,26 @@ public abstract class HelloRootException extends RuntimeException {
     this.code = Objects.requireNonNull(code, "code");
     this.messageTemplate = Objects.requireNonNull(messageTemplate, "messageTemplate");
     this.details = Map.copyOf(Objects.requireNonNull(details, "details"));
+  }
+
+  public String code() {
+    return code;
+  }
+
+  public String messageTemplate() {
+    return messageTemplate;
+  }
+
+  public Map<String, Object> details() {
+    return details;
+  }
+
+  public String source() {
+    return SOURCE;
+  }
+
+  public boolean recoverable() {
+    return false;
   }
 
   public Map<String, Object> errorInfo() {
@@ -149,9 +187,16 @@ public final class HelloWorldException extends CommonException {
     <outputDirectory>${project.build.directory}/generated-sources/edl</outputDirectory>
     <failOnWarnings>false</failOnWarnings>
     <generateDocs>false</generateDocs>
+    <generateSpringHandler>false</generateSpringHandler>
   </configuration>
 </plugin>
 ```
+
+## 🌱 Spring Handler Generation
+Enable the Spring handler to generate a `@RestControllerAdvice` in the same package. The handler catches the root exception and returns a response with `source`, `code`, `description`, `recoverable`, and `details` where `details` is a JSON string. It uses Jackson `ObjectMapper`, so include `jackson-databind` at runtime.
+
+## 📖 Developer Guide
+See `DEV_GUIDE.md` for YAML examples, Maven usage, and generated exception usage.
 
 ## 🛠️ Troubleshooting
 - Ensure the YAML file is valid and uses the required keys

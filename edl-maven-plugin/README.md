@@ -21,6 +21,7 @@
     <outputDirectory>${project.build.directory}/generated-sources/edl</outputDirectory>
     <failOnWarnings>false</failOnWarnings>
     <generateDocs>false</generateDocs>
+    <generateSpringHandler>false</generateSpringHandler>
   </configuration>
 </plugin>
 ```
@@ -30,3 +31,4 @@
 - `outputDirectory` destination for generated sources
 - `failOnWarnings` fail the build when warnings are present
 - `generateDocs` emit a simple markdown summary
+- `generateSpringHandler` emit a Spring `@RestControllerAdvice` handler
