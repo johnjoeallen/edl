@@ -15,6 +15,12 @@ public final class Validator {
   private static final Pattern CATEGORY_PATTERN = Pattern.compile("[A-Z][A-Za-z0-9]*");
   private static final Pattern ERROR_PATTERN = Pattern.compile("[a-z][A-Za-z0-9]*");
   private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{([A-Za-z][A-Za-z0-9_]*)\\}");
+  private static final List<String> DEFAULT_CORE_PARAMS =
+      List.of("source", "code", "description", "detail", "details", "recoverable");
+  private static final Set<String> DERIVED_PARAMS =
+      Set.of("source", "code", "description", "detail", "details", "recoverable");
+  private static final Set<String> RENDERABLE_DERIVED_PARAMS =
+      Set.of("source", "code", "recoverable");
 
   public ValidationResult validate(EdlSpec spec, Map<String, Mark> marks, Path sourcePath) {
     List<Diagnostic> diagnostics = new ArrayList<>();
@@ -78,38 +84,66 @@ public final class Validator {
       if (!codes.add(error.getNumericCode())) {
         diagnostics.add(diagnostic(DiagnosticSeverity.ERROR,
             "Duplicate numeric code '" + error.getNumericCode() + "' in category " + categoryName,
-            "errors." + error.getName() + ".code", file, marks));
+            "errors." + error.getName() + ".fixed.code", file, marks));
+      }
+
+      CategoryDef category = spec.getCategories().get(categoryName);
+      Set<String> coreParams = category == null ? Set.of() : category.getParams().keySet();
+      Set<String> requiredParams = error.getRequiredParams().keySet();
+      Set<String> optionalParams = error.getOptionalParams().keySet();
+      for (String param : requiredParams) {
+        if (DERIVED_PARAMS.contains(param)) {
+          diagnostics.add(diagnostic(DiagnosticSeverity.ERROR,
+              "Param '" + param + "' is reserved for derived values",
+              "errors." + error.getName() + ".required." + param, file, marks));
+        } else if (coreParams.contains(param)) {
+          diagnostics.add(diagnostic(DiagnosticSeverity.ERROR,
+              "Param '" + param + "' duplicates category param",
+              "errors." + error.getName() + ".required." + param, file, marks));
+        }
+      }
+      for (String param : optionalParams) {
+        if (DERIVED_PARAMS.contains(param)) {
+          diagnostics.add(diagnostic(DiagnosticSeverity.ERROR,
+              "Param '" + param + "' is reserved for derived values",
+              "errors." + error.getName() + ".optional." + param, file, marks));
+        } else if (coreParams.contains(param) || requiredParams.contains(param)) {
+          diagnostics.add(diagnostic(DiagnosticSeverity.ERROR,
+              "Param '" + param + "' duplicates another param",
+              "errors." + error.getName() + ".optional." + param, file, marks));
+        }
       }
     }
   }
 
   private void validateMessageTemplates(EdlSpec spec, List<Diagnostic> diagnostics, String file, Map<String, Mark> marks) {
     for (ErrorDef error : spec.getErrors().values()) {
-      Set<String> placeholders = new HashSet<>();
-      Matcher matcher = PLACEHOLDER_PATTERN.matcher(error.getMessage());
-      while (matcher.find()) {
-        placeholders.add(matcher.group(1));
+      CategoryDef category = spec.getCategories().get(error.getCategory());
+      Set<String> allowedParams = new HashSet<>();
+      if (category != null) {
+        allowedParams.addAll(category.getParams().keySet());
       }
-      Set<String> params = error.getParams().keySet();
-      for (String placeholder : placeholders) {
-        if (!params.contains(placeholder)) {
-          diagnostics.add(diagnostic(DiagnosticSeverity.ERROR,
-              "Message placeholder '" + placeholder + "' is missing a param",
-              "errors." + error.getName() + ".message", file, marks));
-        }
-      }
-      for (String required : error.getRequiredParams()) {
-        if (!params.contains(required)) {
-          diagnostics.add(diagnostic(DiagnosticSeverity.ERROR,
-              "Required param '" + required + "' is not declared in params",
-              "errors." + error.getName() + ".requiredParams", file, marks));
-        }
-      }
+      allowedParams.addAll(error.getRequiredParams().keySet());
+      allowedParams.addAll(error.getOptionalParams().keySet());
+      allowedParams.addAll(RENDERABLE_DERIVED_PARAMS);
+
+      validateTemplatePlaceholders(error.getDescription(), allowedParams,
+          "errors." + error.getName() + ".description", diagnostics, file, marks);
+      validateTemplatePlaceholders(error.getDetail(), allowedParams,
+          "errors." + error.getName() + ".detail", diagnostics, file, marks);
+
     }
   }
 
   private void validateResponseFields(EdlSpec spec, List<Diagnostic> diagnostics, String file, Map<String, Mark> marks) {
-    Set<String> allowed = Set.of("source", "code", "description", "recoverable", "details");
+    Set<String> allowed = new HashSet<>(DEFAULT_CORE_PARAMS);
+    for (CategoryDef category : spec.getCategories().values()) {
+      if (category.getParams().isEmpty()) {
+        allowed.addAll(DEFAULT_CORE_PARAMS);
+      } else {
+        allowed.addAll(category.getParams().keySet());
+      }
+    }
     Set<String> seenValues = new HashSet<>();
     for (Map.Entry<String, String> entry : spec.getResponseFields().entrySet()) {
       String key = entry.getKey();
@@ -129,10 +163,24 @@ public final class Validator {
             "Response field value '" + value + "' is duplicated", "response." + key, file, marks));
       }
     }
-    for (String required : allowed) {
-      if (!spec.getResponseFields().containsKey(required)) {
+  }
+
+  private void validateTemplatePlaceholders(String template,
+                                            Set<String> allowedParams,
+                                            String path,
+                                            List<Diagnostic> diagnostics,
+                                            String file,
+                                            Map<String, Mark> marks) {
+    Set<String> placeholders = new HashSet<>();
+    Matcher matcher = PLACEHOLDER_PATTERN.matcher(template);
+    while (matcher.find()) {
+      placeholders.add(matcher.group(1));
+    }
+    for (String placeholder : placeholders) {
+      if (!allowedParams.contains(placeholder)) {
         diagnostics.add(diagnostic(DiagnosticSeverity.ERROR,
-            "Missing response field '" + required + "'", "response." + required, file, marks));
+            "Template placeholder '" + placeholder + "' is missing a param",
+            path, file, marks));
       }
     }
   }

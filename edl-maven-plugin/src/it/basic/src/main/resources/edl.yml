@@ -9,7 +9,9 @@ categories:
 errors:
   userNotFound:
     category: NotFound
-    code: 1
-    message: "User {userId} not found"
-    params:
+    fixed:
+      code: 1
+      description: "User {userId} not found"
+      detail: "User {userId} not found detail"
+    required:
       userId: String

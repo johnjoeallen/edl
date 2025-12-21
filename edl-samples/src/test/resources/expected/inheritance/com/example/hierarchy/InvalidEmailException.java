@@ -11,14 +11,16 @@ import java.util.Objects;
 public final class InvalidEmailException extends ValidationException {
   public static final String ERROR_CODE = "0012";
 
-  public static final String MESSAGE_TEMPLATE = "Invalid email {email}";
+  public static final String DESCRIPTION_TEMPLATE = "Invalid email {email}";
+
+  public static final String DETAIL_TEMPLATE = "Invalid email {email} detail";
 
   public static final boolean RECOVERABLE = false;
 
   private final String email;
 
   private InvalidEmailException(String email, Map<String, Object> details, Throwable cause) {
-    super(ERROR_CODE, MESSAGE_TEMPLATE, Objects.requireNonNull(details, "details"), cause);
+    super(ERROR_CODE, DESCRIPTION_TEMPLATE, DETAIL_TEMPLATE, Objects.requireNonNull(details, "details"), cause);
     this.email = email;
   }
 

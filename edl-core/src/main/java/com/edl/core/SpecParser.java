@@ -64,11 +64,15 @@ public final class SpecParser {
       Integer httpStatus = readInteger(categoryMap, diagnostics, file, marks, path + ".httpStatus", false);
       Boolean retryable = readBoolean(categoryMap, diagnostics, file, marks, path + ".retryable", false);
       Boolean abstractFlag = readBoolean(categoryMap, diagnostics, file, marks, path + ".abstract", false);
+      LinkedHashMap<String, String> params = readStringMap(categoryMap, diagnostics, file, marks, path + ".params", false);
       boolean isAbstract = abstractFlag == null || abstractFlag;
       if (codePrefix == null) {
         continue;
       }
-      categories.put(name, new CategoryDef(name, parent, codePrefix, httpStatus, retryable, isAbstract));
+      if (params == null) {
+        params = new LinkedHashMap<>();
+      }
+      categories.put(name, new CategoryDef(name, parent, codePrefix, httpStatus, retryable, isAbstract, params));
     }
     return categories;
   }
@@ -97,26 +101,31 @@ public final class SpecParser {
       }
       LinkedHashMap<String, Object> errorMap = toLinkedMap(rawError, diagnostics, file, marks, path);
       String category = readString(errorMap, diagnostics, file, marks, path + ".category", true);
-      Object codeValue = errorMap.get("code");
-      String message = readString(errorMap, diagnostics, file, marks, path + ".message", true);
-      LinkedHashMap<String, String> params = readStringMap(errorMap, diagnostics, file, marks, path + ".params", true);
-      List<String> requiredParams = readStringList(errorMap, diagnostics, file, marks, path + ".requiredParams", false);
+      Map<String, Object> fixed = readMap(errorMap, diagnostics, file, marks, path + ".fixed", true);
+      Object codeValue = fixed == null ? null : fixed.get("code");
+      String description = fixed == null ? null : readString(fixed, diagnostics, file, marks, path + ".fixed.description", true);
+      String detail = fixed == null ? null : readString(fixed, diagnostics, file, marks, path + ".fixed.detail", true);
+      LinkedHashMap<String, String> requiredParams = readStringMap(errorMap, diagnostics, file, marks, path + ".required", false);
+      LinkedHashMap<String, String> optionalParams = readStringMapOrList(errorMap, diagnostics, file, marks, path + ".optional", false);
       Boolean recoverable = readBoolean(errorMap, diagnostics, file, marks, path + ".recoverable", false);
-      if (category == null || message == null || params == null || codeValue == null) {
+      if (category == null || description == null || detail == null || codeValue == null) {
         if (codeValue == null) {
-          diagnostics.add(diagnostic(DiagnosticSeverity.ERROR, "Missing required key 'code'", path + ".code", file, marks));
+          diagnostics.add(diagnostic(DiagnosticSeverity.ERROR, "Missing required key 'code'", path + ".fixed.code", file, marks));
         }
         continue;
       }
-      String numericCode = coerceCode(codeValue, diagnostics, file, marks, path + ".code");
+      String numericCode = coerceCode(codeValue, diagnostics, file, marks, path + ".fixed.code");
       if (numericCode == null) {
         continue;
       }
       if (requiredParams == null) {
-        requiredParams = List.of();
+        requiredParams = new LinkedHashMap<>();
+      }
+      if (optionalParams == null) {
+        optionalParams = new LinkedHashMap<>();
       }
       boolean isRecoverable = recoverable != null && recoverable;
-      errors.put(name, new ErrorDef(name, category, numericCode, message, params, requiredParams, isRecoverable));
+      errors.put(name, new ErrorDef(name, category, numericCode, description, detail, requiredParams, optionalParams, isRecoverable));
     }
     return errors;
   }
@@ -228,10 +237,10 @@ public final class SpecParser {
                                       Map<String, Mark> marks,
                                       String key,
                                       boolean required) {
-    Object value = map.get(key);
+    Object value = map.get(lastSegment(key));
     if (value == null) {
       if (required) {
-        diagnostics.add(diagnostic(DiagnosticSeverity.ERROR, "Missing required key '" + key + "'", key, file, marks));
+        diagnostics.add(diagnostic(DiagnosticSeverity.ERROR, "Missing required key '" + lastSegment(key) + "'", key, file, marks));
       }
       return Map.of();
     }
@@ -271,13 +280,46 @@ public final class SpecParser {
     return result;
   }
 
+  private LinkedHashMap<String, String> readStringMapOrList(Map<String, Object> map,
+                                                            List<Diagnostic> diagnostics,
+                                                            String file,
+                                                            Map<String, Mark> marks,
+                                                            String path,
+                                                            boolean required) {
+    Object value = map.get(lastSegment(path));
+    if (value == null) {
+      if (required) {
+        diagnostics.add(diagnostic(DiagnosticSeverity.ERROR, "Missing required key '" + lastSegment(path) + "'", path, file, marks));
+        return null;
+      }
+      return new LinkedHashMap<>();
+    }
+    if (value instanceof Map<?, ?>) {
+      return readStringMap(map, diagnostics, file, marks, path, required);
+    }
+    if (value instanceof List<?>) {
+      List<String> names = readStringList(map, diagnostics, file, marks, path, required);
+      if (names == null) {
+        return null;
+      }
+      LinkedHashMap<String, String> result = new LinkedHashMap<>();
+      for (String name : names) {
+        result.put(name, "String");
+      }
+      return result;
+    }
+    diagnostics.add(diagnostic(DiagnosticSeverity.ERROR, "Expected map or list for '" + lastSegment(path) + "'", path, file, marks));
+    return null;
+  }
+
   private LinkedHashMap<String, String> defaultResponseFields() {
     LinkedHashMap<String, String> defaults = new LinkedHashMap<>();
     defaults.put("source", "source");
     defaults.put("code", "code");
     defaults.put("description", "description");
-    defaults.put("recoverable", "recoverable");
+    defaults.put("detail", "detail");
     defaults.put("details", "details");
+    defaults.put("recoverable", "recoverable");
     return defaults;
   }
 

@@ -4,6 +4,7 @@ import java.lang.Object;
 import java.lang.RuntimeException;
 import java.lang.String;
 import java.lang.Throwable;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -12,15 +13,18 @@ public abstract class HelloRootException extends RuntimeException {
 
   private final String code;
 
-  private final String messageTemplate;
+  private final String descriptionTemplate;
+
+  private final String detailTemplate;
 
   private final Map<String, Object> details;
 
-  protected HelloRootException(String code, String messageTemplate, Map<String, Object> details,
-      Throwable cause) {
-    super(messageTemplate, cause);
+  protected HelloRootException(String code, String descriptionTemplate, String detailTemplate,
+      Map<String, Object> details, Throwable cause) {
+    super(descriptionTemplate, cause);
     this.code = Objects.requireNonNull(code, "code");
-    this.messageTemplate = Objects.requireNonNull(messageTemplate, "messageTemplate");
+    this.descriptionTemplate = Objects.requireNonNull(descriptionTemplate, "descriptionTemplate");
+    this.detailTemplate = Objects.requireNonNull(detailTemplate, "detailTemplate");
     this.details = Map.copyOf(Objects.requireNonNull(details, "details"));
   }
 
@@ -28,8 +32,20 @@ public abstract class HelloRootException extends RuntimeException {
     return code;
   }
 
-  public String messageTemplate() {
-    return messageTemplate;
+  public String descriptionTemplate() {
+    return descriptionTemplate;
+  }
+
+  public String description() {
+    return renderTemplate(descriptionTemplate, renderValues());
+  }
+
+  public String detailTemplate() {
+    return detailTemplate;
+  }
+
+  public String detail() {
+    return renderTemplate(detailTemplate, renderValues());
   }
 
   public Map<String, Object> details() {
@@ -41,22 +57,26 @@ public abstract class HelloRootException extends RuntimeException {
   }
 
   public Map<String, Object> errorInfo() {
-    return Map.ofEntries(
-          Map.entry("source", SOURCE),
-          Map.entry("code", code),
-          Map.entry("description", renderDescription(messageTemplate, details)),
-          Map.entry("details", details),
-          Map.entry("recoverable", recoverable())
-        );
+    return coreValues();
   }
 
   public boolean recoverable() {
     return false;
   }
 
-  private static String renderDescription(String template, Map<String, Object> details) {
+  protected abstract Map<String, Object> coreValues();
+
+  private Map<String, Object> renderValues() {
+    Map<String, Object> values = new LinkedHashMap<>(details);
+    values.put("source", SOURCE);
+    values.put("code", code);
+    values.put("recoverable", recoverable());
+    return values;
+  }
+
+  private static String renderTemplate(String template, Map<String, Object> values) {
     String resolved = template;
-    for (Map.Entry<String, Object> entry : details.entrySet()) {
+    for (Map.Entry<String, Object> entry : values.entrySet()) {
       resolved = resolved.replace("{" + entry.getKey() + "}", String.valueOf(entry.getValue()));
     }
     return resolved;

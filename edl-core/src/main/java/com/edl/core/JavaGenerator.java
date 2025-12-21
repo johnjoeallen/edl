@@ -2,7 +2,6 @@ package com.edl.core;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
@@ -28,6 +27,12 @@ import javax.lang.model.element.Modifier;
 
 public final class JavaGenerator {
   private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{([A-Za-z][A-Za-z0-9_]*)\\}");
+  private static final List<String> DEFAULT_CORE_PARAMS =
+      List.of("source", "code", "description", "detail", "details", "recoverable");
+  private static final Set<String> DERIVED_PARAMS =
+      Set.of("source", "code", "description", "detail", "details", "recoverable");
+  private static final Set<String> RENDERABLE_DERIVED_PARAMS =
+      Set.of("source", "code", "recoverable");
 
   public List<Path> generate(EdlSpec spec, Path outputDirectory) throws IOException {
     List<Path> generatedFiles = new ArrayList<>();
@@ -71,7 +76,8 @@ public final class JavaGenerator {
     TypeName mapStringObject = ParameterizedTypeName.get(mapType, ClassName.get(String.class), ClassName.get(Object.class));
 
     FieldSpec codeField = FieldSpec.builder(String.class, "code", Modifier.PRIVATE, Modifier.FINAL).build();
-    FieldSpec templateField = FieldSpec.builder(String.class, "messageTemplate", Modifier.PRIVATE, Modifier.FINAL).build();
+    FieldSpec descriptionTemplateField = FieldSpec.builder(String.class, "descriptionTemplate", Modifier.PRIVATE, Modifier.FINAL).build();
+    FieldSpec detailTemplateField = FieldSpec.builder(String.class, "detailTemplate", Modifier.PRIVATE, Modifier.FINAL).build();
     FieldSpec detailsField = FieldSpec.builder(mapStringObject, "details", Modifier.PRIVATE, Modifier.FINAL).build();
     FieldSpec sourceField = FieldSpec.builder(String.class, "SOURCE", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
         .initializer("$S", spec.getSource())
@@ -80,12 +86,14 @@ public final class JavaGenerator {
     MethodSpec constructor = MethodSpec.constructorBuilder()
         .addModifiers(Modifier.PROTECTED)
         .addParameter(String.class, "code")
-        .addParameter(String.class, "messageTemplate")
+        .addParameter(String.class, "descriptionTemplate")
+        .addParameter(String.class, "detailTemplate")
         .addParameter(mapStringObject, "details")
         .addParameter(Throwable.class, "cause")
-        .addStatement("super(messageTemplate, cause)")
+        .addStatement("super(descriptionTemplate, cause)")
         .addStatement("this.code = $T.requireNonNull(code, $S)", Objects.class, "code")
-        .addStatement("this.messageTemplate = $T.requireNonNull(messageTemplate, $S)", Objects.class, "messageTemplate")
+        .addStatement("this.descriptionTemplate = $T.requireNonNull(descriptionTemplate, $S)", Objects.class, "descriptionTemplate")
+        .addStatement("this.detailTemplate = $T.requireNonNull(detailTemplate, $S)", Objects.class, "detailTemplate")
         .addStatement("this.details = $T.copyOf($T.requireNonNull(details, $S))", Map.class, Objects.class, "details")
         .build();
 
@@ -94,10 +102,25 @@ public final class JavaGenerator {
         .returns(String.class)
         .addStatement("return code")
         .build();
-    MethodSpec getMessageTemplate = MethodSpec.methodBuilder("messageTemplate")
+    MethodSpec getDescriptionTemplate = MethodSpec.methodBuilder("descriptionTemplate")
         .addModifiers(Modifier.PUBLIC)
         .returns(String.class)
-        .addStatement("return messageTemplate")
+        .addStatement("return descriptionTemplate")
+        .build();
+    MethodSpec getDescription = MethodSpec.methodBuilder("description")
+        .addModifiers(Modifier.PUBLIC)
+        .returns(String.class)
+        .addStatement("return renderTemplate(descriptionTemplate, renderValues())")
+        .build();
+    MethodSpec getDetailTemplate = MethodSpec.methodBuilder("detailTemplate")
+        .addModifiers(Modifier.PUBLIC)
+        .returns(String.class)
+        .addStatement("return detailTemplate")
+        .build();
+    MethodSpec getDetail = MethodSpec.methodBuilder("detail")
+        .addModifiers(Modifier.PUBLIC)
+        .returns(String.class)
+        .addStatement("return renderTemplate(detailTemplate, renderValues())")
         .build();
     MethodSpec getParameters = MethodSpec.methodBuilder("details")
         .addModifiers(Modifier.PUBLIC)
@@ -112,7 +135,7 @@ public final class JavaGenerator {
     MethodSpec getErrorInfo = MethodSpec.methodBuilder("errorInfo")
         .addModifiers(Modifier.PUBLIC)
         .returns(mapStringObject)
-        .addStatement("return $L", buildErrorInfoMap())
+        .addStatement("return coreValues()")
         .build();
     MethodSpec recoverable = MethodSpec.methodBuilder("recoverable")
         .addModifiers(Modifier.PUBLIC)
@@ -120,13 +143,28 @@ public final class JavaGenerator {
         .addStatement("return false")
         .build();
 
-    MethodSpec renderDescription = MethodSpec.methodBuilder("renderDescription")
+    MethodSpec coreValues = MethodSpec.methodBuilder("coreValues")
+        .addModifiers(Modifier.PROTECTED, Modifier.ABSTRACT)
+        .returns(mapStringObject)
+        .build();
+
+    MethodSpec renderValues = MethodSpec.methodBuilder("renderValues")
+        .addModifiers(Modifier.PRIVATE)
+        .returns(mapStringObject)
+        .addStatement("$T values = new $T<>(details)", mapStringObject, LinkedHashMap.class)
+        .addStatement("values.put($S, SOURCE)", "source")
+        .addStatement("values.put($S, code)", "code")
+        .addStatement("values.put($S, recoverable())", "recoverable")
+        .addStatement("return values")
+        .build();
+
+    MethodSpec renderTemplate = MethodSpec.methodBuilder("renderTemplate")
         .addModifiers(Modifier.PRIVATE, Modifier.STATIC)
         .returns(String.class)
         .addParameter(String.class, "template")
-        .addParameter(mapStringObject, "details")
+        .addParameter(mapStringObject, "values")
         .addStatement("$T resolved = template", String.class)
-        .beginControlFlow("for ($T.Entry<String, Object> entry : details.entrySet())", Map.class)
+        .beginControlFlow("for ($T.Entry<String, Object> entry : values.entrySet())", Map.class)
         .addStatement("resolved = resolved.replace($S + entry.getKey() + $S, $T.valueOf(entry.getValue()))",
             "{", "}", String.class)
         .endControlFlow()
@@ -138,16 +176,22 @@ public final class JavaGenerator {
         .superclass(RuntimeException.class)
         .addField(sourceField)
         .addField(codeField)
-        .addField(templateField)
+        .addField(descriptionTemplateField)
+        .addField(detailTemplateField)
         .addField(detailsField)
         .addMethod(constructor)
         .addMethod(getCode)
-        .addMethod(getMessageTemplate)
+        .addMethod(getDescriptionTemplate)
+        .addMethod(getDescription)
+        .addMethod(getDetailTemplate)
+        .addMethod(getDetail)
         .addMethod(getParameters)
         .addMethod(getSource)
         .addMethod(getErrorInfo)
         .addMethod(recoverable)
-        .addMethod(renderDescription)
+        .addMethod(coreValues)
+        .addMethod(renderValues)
+        .addMethod(renderTemplate)
         .build();
   }
 
@@ -175,15 +219,41 @@ public final class JavaGenerator {
         .initializer("$S", category.getCodePrefix())
         .build());
 
+    List<Map.Entry<String, String>> coreParams = new ArrayList<>(category.getParams().entrySet());
+    List<Map.Entry<String, String>> customCoreParams = new ArrayList<>();
+    for (Map.Entry<String, String> entry : coreParams) {
+      if (!DERIVED_PARAMS.contains(entry.getKey())) {
+        customCoreParams.add(entry);
+      }
+    }
+
+    for (Map.Entry<String, String> entry : customCoreParams) {
+      TypeName typeName = parseTypeName(entry.getValue());
+      type.addField(FieldSpec.builder(typeName, entry.getKey(), Modifier.PRIVATE, Modifier.FINAL).build());
+      type.addMethod(MethodSpec.methodBuilder(entry.getKey())
+          .addModifiers(Modifier.PUBLIC)
+          .returns(typeName)
+          .addStatement("return $L", entry.getKey())
+          .build());
+    }
+
     MethodSpec constructor = MethodSpec.constructorBuilder()
         .addModifiers(Modifier.PROTECTED)
         .addParameter(String.class, "errorCode")
-        .addParameter(String.class, "messageTemplate")
+        .addParameter(String.class, "descriptionTemplate")
+        .addParameter(String.class, "detailTemplate")
         .addParameter(mapStringObject, "details")
         .addParameter(Throwable.class, "cause")
-        .addStatement("super(CODE_PREFIX + $T.requireNonNull(errorCode, $S), messageTemplate, details, cause)",
+        .addStatement("super(CODE_PREFIX + $T.requireNonNull(errorCode, $S), descriptionTemplate, detailTemplate, details, cause)",
             Objects.class, "errorCode")
         .build();
+    MethodSpec.Builder constructorBuilder = constructor.toBuilder();
+    for (Map.Entry<String, String> entry : customCoreParams) {
+      TypeName typeName = parseTypeName(entry.getValue());
+      constructorBuilder.addParameter(typeName, entry.getKey());
+      constructorBuilder.addStatement("this.$L = $L", entry.getKey(), entry.getKey());
+    }
+    constructor = constructorBuilder.build();
     type.addMethod(constructor);
 
     if (category.getHttpStatus() != null) {
@@ -201,6 +271,34 @@ public final class JavaGenerator {
           .build());
     }
 
+    List<String> coreParamNames = category.getParams().isEmpty()
+        ? DEFAULT_CORE_PARAMS
+        : new ArrayList<>(category.getParams().keySet());
+    MethodSpec.Builder coreValues = MethodSpec.methodBuilder("coreValues")
+        .addAnnotation(Override.class)
+        .addModifiers(Modifier.PROTECTED)
+        .returns(mapStringObject)
+        .addStatement("$T values = new $T<>()", mapStringObject, LinkedHashMap.class);
+    for (String name : coreParamNames) {
+      if ("source".equals(name)) {
+        coreValues.addStatement("values.put($S, source())", name);
+      } else if ("code".equals(name)) {
+        coreValues.addStatement("values.put($S, code())", name);
+      } else if ("description".equals(name)) {
+        coreValues.addStatement("values.put($S, description())", name);
+      } else if ("detail".equals(name)) {
+        coreValues.addStatement("values.put($S, detail())", name);
+      } else if ("recoverable".equals(name)) {
+        coreValues.addStatement("values.put($S, recoverable())", name);
+      } else if ("details".equals(name)) {
+        coreValues.addStatement("values.put($S, details())", name);
+      } else {
+        coreValues.addStatement("values.put($S, $L)", name, name);
+      }
+    }
+    coreValues.addStatement("return $T.copyOf(values)", Map.class);
+    type.addMethod(coreValues.build());
+
     return type.build();
   }
 
@@ -216,16 +314,46 @@ public final class JavaGenerator {
     type.addField(FieldSpec.builder(String.class, "ERROR_CODE", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
         .initializer("$S", error.getNumericCode())
         .build());
-    type.addField(FieldSpec.builder(String.class, "MESSAGE_TEMPLATE", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-        .initializer("$S", error.getMessage())
+    type.addField(FieldSpec.builder(String.class, "DESCRIPTION_TEMPLATE", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+        .initializer("$S", error.getDescription())
+        .build());
+    type.addField(FieldSpec.builder(String.class, "DETAIL_TEMPLATE", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+        .initializer("$S", error.getDetail())
         .build());
     type.addField(FieldSpec.builder(boolean.class, "RECOVERABLE", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
         .initializer("$L", error.isRecoverable())
         .build());
 
+    List<Map.Entry<String, String>> customCoreParams = new ArrayList<>();
+    for (Map.Entry<String, String> entry : category.getParams().entrySet()) {
+      if (!DERIVED_PARAMS.contains(entry.getKey())) {
+        customCoreParams.add(entry);
+      }
+    }
+
     List<ParameterSpec> params = new ArrayList<>();
     List<TypeName> paramTypes = new ArrayList<>();
-    for (Map.Entry<String, String> entry : error.getParams().entrySet()) {
+    List<String> coreParamNames = new ArrayList<>();
+    for (Map.Entry<String, String> entry : customCoreParams) {
+      TypeName typeName = parseTypeName(entry.getValue());
+      paramTypes.add(typeName);
+      params.add(ParameterSpec.builder(typeName, entry.getKey()).build());
+      coreParamNames.add(entry.getKey());
+    }
+
+    for (Map.Entry<String, String> entry : error.getRequiredParams().entrySet()) {
+      TypeName typeName = parseTypeName(entry.getValue());
+      paramTypes.add(typeName);
+      params.add(ParameterSpec.builder(typeName, entry.getKey()).build());
+      type.addField(FieldSpec.builder(typeName, entry.getKey(), Modifier.PRIVATE, Modifier.FINAL).build());
+      type.addMethod(MethodSpec.methodBuilder(entry.getKey())
+          .addModifiers(Modifier.PUBLIC)
+          .returns(typeName)
+          .addStatement("return $L", entry.getKey())
+          .build());
+    }
+
+    for (Map.Entry<String, String> entry : error.getOptionalParams().entrySet()) {
       TypeName typeName = parseTypeName(entry.getValue());
       paramTypes.add(typeName);
       params.add(ParameterSpec.builder(typeName, entry.getKey()).build());
@@ -250,9 +378,15 @@ public final class JavaGenerator {
     }
     ctor.addParameter(mapStringObject, "details");
     ctor.addParameter(Throwable.class, "cause");
-    ctor.addStatement("super(ERROR_CODE, MESSAGE_TEMPLATE, $T.requireNonNull(details, $S), cause)", Objects.class, "details");
+    String coreArgs = String.join(", ", coreParamNames);
+    String extra = coreArgs.isEmpty() ? "" : ", " + coreArgs;
+    ctor.addStatement("super(ERROR_CODE, DESCRIPTION_TEMPLATE, DETAIL_TEMPLATE, $T.requireNonNull(details, $S), cause$L)",
+        Objects.class, "details", extra);
+    Set<String> coreParamNameSet = new LinkedHashSet<>(coreParamNames);
     for (ParameterSpec param : params) {
-      ctor.addStatement("this.$L = $L", param.name, param.name);
+      if (!coreParamNameSet.contains(param.name)) {
+        ctor.addStatement("this.$L = $L", param.name, param.name);
+      }
     }
     type.addMethod(ctor.build());
 
@@ -262,17 +396,19 @@ public final class JavaGenerator {
         .addStatement("return new Builder()")
         .build());
 
-    type.addType(buildBuilder(error, params, paramTypes));
+    type.addType(buildBuilder(category, error, params, paramTypes));
 
     return type.build();
   }
 
-  private TypeSpec buildBuilder(ErrorDef error, List<ParameterSpec> params, List<TypeName> paramTypes) {
+  private TypeSpec buildBuilder(CategoryDef category,
+                                ErrorDef error,
+                                List<ParameterSpec> params,
+                                List<TypeName> paramTypes) {
     TypeSpec.Builder builder = TypeSpec.classBuilder("Builder")
         .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
 
     ClassName linkedHashMap = ClassName.get(LinkedHashMap.class);
-    ClassName objectMapper = ClassName.get("com.fasterxml.jackson.databind", "ObjectMapper");
     TypeName mapStringObject = ParameterizedTypeName.get(ClassName.get(Map.class), ClassName.get(String.class), ClassName.get(Object.class));
 
     List<TypeName> boxedTypes = new ArrayList<>();
@@ -309,8 +445,14 @@ public final class JavaGenerator {
         .addModifiers(Modifier.PUBLIC)
         .returns(exceptionType);
 
-    Set<String> required = new LinkedHashSet<>(error.getRequiredParams());
-    required.addAll(extractPlaceholders(error.getMessage()));
+    Set<String> required = new LinkedHashSet<>();
+    for (String param : category.getParams().keySet()) {
+      if (!DERIVED_PARAMS.contains(param)) {
+        required.add(param);
+      }
+    }
+    required.addAll(error.getRequiredParams().keySet());
+    required.addAll(extractPlaceholders(error.getDescription(), error.getDetail()));
 
     for (int i = 0; i < params.size(); i++) {
       ParameterSpec param = params.get(i);
@@ -376,17 +518,6 @@ public final class JavaGenerator {
     return builder.build();
   }
 
-  private CodeBlock buildErrorInfoMap() {
-    CodeBlock.Builder builder = CodeBlock.builder();
-    builder.add("$T.ofEntries(\n", Map.class);
-    builder.add("  $T.entry($S, SOURCE),\n", Map.class, "source");
-    builder.add("  $T.entry($S, code),\n", Map.class, "code");
-    builder.add("  $T.entry($S, renderDescription(messageTemplate, details)),\n", Map.class, "description");
-    builder.add("  $T.entry($S, details),\n", Map.class, "details");
-    builder.add("  $T.entry($S, recoverable())\n", Map.class, "recoverable");
-    builder.add(")");
-    return builder.build();
-  }
 
   private TypeName parseTypeName(String type) {
     String trimmed = type.trim();
@@ -471,11 +602,13 @@ public final class JavaGenerator {
     return parseTypeName(arg);
   }
 
-  private Set<String> extractPlaceholders(String message) {
+  private Set<String> extractPlaceholders(String... templates) {
     Set<String> placeholders = new LinkedHashSet<>();
-    Matcher matcher = PLACEHOLDER_PATTERN.matcher(message);
-    while (matcher.find()) {
-      placeholders.add(matcher.group(1));
+    for (String template : templates) {
+      Matcher matcher = PLACEHOLDER_PATTERN.matcher(template);
+      while (matcher.find()) {
+        placeholders.add(matcher.group(1));
+      }
     }
     return placeholders;
   }
@@ -511,28 +644,30 @@ public final class JavaGenerator {
         .build());
 
     ClassName rootType = ClassName.get(spec.getPackageName(), spec.getRootException());
-    String sourceKey = spec.getResponseFields().get("source");
-    String codeKey = spec.getResponseFields().get("code");
-    String descriptionKey = spec.getResponseFields().get("description");
-    String recoverableKey = spec.getResponseFields().get("recoverable");
-    String detailsKey = spec.getResponseFields().get("details");
-
-    MethodSpec method = MethodSpec.methodBuilder("handle" + spec.getRootException())
+    MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("handle" + spec.getRootException())
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(AnnotationSpec.builder(exceptionHandler)
             .addMember("value", "$T.class", rootType)
             .build())
         .addParameter(rootType, "exception")
         .returns(ParameterizedTypeName.get(responseEntity, mapStringObject))
-        .addStatement("$T body = new $T<>()", mapStringObject, linkedHashMap)
-        .addStatement("body.put($S, exception.source())", sourceKey)
-        .addStatement("body.put($S, exception.code())", codeKey)
-        .addStatement("body.put($S, exception.errorInfo().get($S))", descriptionKey, "description")
-        .addStatement("body.put($S, exception.recoverable())", recoverableKey)
-        .addStatement("body.put($S, toJson(exception.details()))", detailsKey)
-        .addStatement("return $T.status(500).body(body)", responseEntity)
-        .build();
-    type.addMethod(method);
+        .addStatement("$T info = exception.errorInfo()", mapStringObject)
+        .addStatement("$T body = new $T<>()", mapStringObject, linkedHashMap);
+    for (Map.Entry<String, String> entry : spec.getResponseFields().entrySet()) {
+      String key = entry.getKey();
+      String responseKey = entry.getValue();
+      if ("details".equals(key)) {
+        methodBuilder.beginControlFlow("if (info.containsKey($S))", key)
+            .addStatement("body.put($S, toJson(($T) info.get($S)))", responseKey, mapStringObject, key)
+            .endControlFlow();
+      } else {
+        methodBuilder.beginControlFlow("if (info.containsKey($S))", key)
+            .addStatement("body.put($S, info.get($S))", responseKey, key)
+            .endControlFlow();
+      }
+    }
+    methodBuilder.addStatement("return $T.status(500).body(body)", responseEntity);
+    type.addMethod(methodBuilder.build());
 
     type.addMethod(MethodSpec.methodBuilder("toJson")
         .addModifiers(Modifier.PRIVATE, Modifier.STATIC)

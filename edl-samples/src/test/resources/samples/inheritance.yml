@@ -5,24 +5,44 @@ categories:
   Base:
     codePrefix: BASE
     httpStatus: 500
+    params:
+      source: String
+      code: String
+      description: String
+      detail: String
   Validation:
     parent: Base
     codePrefix: VAL
     httpStatus: 400
+    params:
+      source: String
+      code: String
+      description: String
+      detail: String
   Input:
     parent: Validation
     codePrefix: IN
     retryable: false
+    httpStatus: 400
+    params:
+      source: String
+      code: String
+      description: String
+      detail: String
 errors:
   invalidEmail:
     category: Validation
-    code: "12"
-    message: "Invalid email {email}"
-    params:
+    fixed:
+      code: "12"
+      description: "Invalid email {email}"
+      detail: "Invalid email {email} detail"
+    required:
       email: String
   missingField:
     category: Input
-    code: 99
-    message: "Missing {field}"
-    params:
+    fixed:
+      code: 99
+      description: "Missing {field}"
+      detail: "Missing {field} detail"
+    required:
       field: String

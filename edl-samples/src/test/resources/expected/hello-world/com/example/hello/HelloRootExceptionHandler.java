@@ -1,6 +1,7 @@
 package com.example.hello;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.lang.Exception;
 import java.lang.Object;
 import java.lang.String;
 import java.util.LinkedHashMap;
@@ -16,12 +17,26 @@ public class HelloRootExceptionHandler {
   @ExceptionHandler(HelloRootException.class)
   public ResponseEntity<Map<String, Object>> handleHelloRootException(
       HelloRootException exception) {
+    Map<String, Object> info = exception.errorInfo();
     Map<String, Object> body = new LinkedHashMap<>();
-    body.put("source", exception.source());
-    body.put("reasonCode", exception.code());
-    body.put("description", exception.errorInfo().get("description"));
-    body.put("recoverable", exception.recoverable());
-    body.put("detailsJson", toJson(exception.details()));
+    if (info.containsKey("source")) {
+      body.put("source", info.get("source"));
+    }
+    if (info.containsKey("code")) {
+      body.put("reasonCode", info.get("code"));
+    }
+    if (info.containsKey("description")) {
+      body.put("message", info.get("description"));
+    }
+    if (info.containsKey("detail")) {
+      body.put("detail", info.get("detail"));
+    }
+    if (info.containsKey("recoverable")) {
+      body.put("canRecover", info.get("recoverable"));
+    }
+    if (info.containsKey("details")) {
+      body.put("detailsJson", toJson((Map<String, Object>) info.get("details")));
+    }
     return ResponseEntity.status(500).body(body);
   }
 

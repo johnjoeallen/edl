@@ -11,14 +11,16 @@ import java.util.Objects;
 public final class HelloWorldException extends CommonException {
   public static final String ERROR_CODE = "0001";
 
-  public static final String MESSAGE_TEMPLATE = "Hello {name}";
+  public static final String DESCRIPTION_TEMPLATE = "Hello {name}";
+
+  public static final String DETAIL_TEMPLATE = "Hello detail {name}";
 
   public static final boolean RECOVERABLE = false;
 
   private final String name;
 
   private HelloWorldException(String name, Map<String, Object> details, Throwable cause) {
-    super(ERROR_CODE, MESSAGE_TEMPLATE, Objects.requireNonNull(details, "details"), cause);
+    super(ERROR_CODE, DESCRIPTION_TEMPLATE, DETAIL_TEMPLATE, Objects.requireNonNull(details, "details"), cause);
     this.name = name;
   }
 

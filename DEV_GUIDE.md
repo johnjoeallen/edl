@@ -15,16 +15,19 @@ Top level keys:
 Category fields:
 - `parent` optional string
 - `codePrefix` required string
-- `httpStatus` optional int
+- `httpStatus` optional int (required when Spring handler generation is enabled)
 - `retryable` optional boolean
 - `abstract` optional boolean, default true
+- `params` optional map of core param names to Java type strings
 
 Error fields:
 - `category` required string
-- `code` required number or string, normalized to 4 digits
-- `message` required string with `{placeholders}`
-- `params` required map of `name` to Java type string
-- `requiredParams` optional list of param names
+- `fixed` required map
+  - `code` required number or string, normalized to 4 digits
+  - `description` required string with `{placeholders}`
+  - `detail` required string with `{placeholders}`
+- `required` optional map of `name` to Java type string
+- `optional` optional list of param names (defaults to `String`)
 - `recoverable` optional boolean, default false
 - `response` optional map of core field name to response field name
 
@@ -37,15 +40,21 @@ source: hello-service
 categories:
   Common:
     codePrefix: CM
+    httpStatus: 500
+    params:
+      source: String
+      code: String
+      description: String
+      detail: String
 errors:
   helloWorld:
     category: Common
-    code: 1
-    message: "Hello {name}"
-    params:
+    fixed:
+      code: 1
+      description: "Hello {name}"
+      detail: "Hello detail {name}"
+    required:
       name: String
-    requiredParams:
-      - name
 ```
 
 Recoverable error with extra params:
@@ -57,21 +66,28 @@ categories:
   Billing:
     codePrefix: BILL
     retryable: true
+    httpStatus: 500
+    params:
+      source: String
+      code: String
+      description: String
+      detail: String
 errors:
   paymentDeclined:
     category: Billing
-    code: 5
-    message: "Payment declined {paymentId}"
-    params:
+    fixed:
+      code: 5
+      description: "Payment declined {paymentId}"
+      detail: "Payment declined {paymentId} detail"
+    required:
       paymentId: String
       reason: String
-    requiredParams:
-      - paymentId
     recoverable: true
 response:
   source: source
   code: reasonCode
   description: description
+  detail: detail
   recoverable: recoverable
   details: detailsJson
 ```
@@ -108,7 +124,7 @@ Enable the Spring handler to generate a `@RestControllerAdvice` in the same pack
 </configuration>
 ```
 
-The response map contains `source`, `code`, `description`, `recoverable`, and `details` where `details` is a JSON string.
+The response map contains `source`, `code`, `description`, `detail`, `recoverable`, and `details` where `details` is a JSON string. When handler generation is enabled, every category must define `httpStatus`.
 
 ## ☕ Using Generated Exceptions
 ```java
@@ -117,7 +133,8 @@ HelloWorldException exception = HelloWorldException.builder()
     .build();
 
 String code = exception.code();
-String template = exception.messageTemplate();
+String template = exception.descriptionTemplate();
+String detailTemplate = exception.detailTemplate();
 Map<String, Object> details = exception.details();
 boolean recoverable = exception.recoverable();
 
@@ -125,6 +142,6 @@ Map<String, Object> info = exception.errorInfo();
 ```
 
 Notes:
-- `errorInfo().description` is the template expanded with `details`.
+- `errorInfo().description` and `errorInfo().detail` are the templates expanded with `details`.
 - `details` contains only the typed params from the builder.
 - `recoverable` defaults to `false` unless set in the error.

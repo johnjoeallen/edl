@@ -11,14 +11,16 @@ import java.util.Objects;
 public final class MissingFieldException extends InputException {
   public static final String ERROR_CODE = "0099";
 
-  public static final String MESSAGE_TEMPLATE = "Missing {field}";
+  public static final String DESCRIPTION_TEMPLATE = "Missing {field}";
+
+  public static final String DETAIL_TEMPLATE = "Missing {field} detail";
 
   public static final boolean RECOVERABLE = false;
 
   private final String field;
 
   private MissingFieldException(String field, Map<String, Object> details, Throwable cause) {
-    super(ERROR_CODE, MESSAGE_TEMPLATE, Objects.requireNonNull(details, "details"), cause);
+    super(ERROR_CODE, DESCRIPTION_TEMPLATE, DETAIL_TEMPLATE, Objects.requireNonNull(details, "details"), cause);
     this.field = field;
   }
 

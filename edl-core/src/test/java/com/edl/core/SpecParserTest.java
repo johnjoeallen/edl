@@ -22,9 +22,11 @@ public class SpecParserTest {
         + "errors:\n"
         + "  invalidInput:\n"
         + "    category: Validation\n"
-        + "    code: 7\n"
-        + "    message: \"Bad {field}\"\n"
-        + "    params:\n"
+        + "    fixed:\n"
+        + "      code: 7\n"
+        + "      description: \"Bad {field}\"\n"
+        + "      detail: \"Bad {field} detail\"\n"
+        + "    required:\n"
         + "      field: String\n";
 
     Path temp = Files.createTempFile("edl", ".yml");
@@ -52,9 +54,11 @@ public class SpecParserTest {
         + "errors:\n"
         + "  missing:\n"
         + "    category: NotReal\n"
-        + "    code: 1\n"
-        + "    message: \"Missing {id}\"\n"
-        + "    params:\n"
+        + "    fixed:\n"
+        + "      code: 1\n"
+        + "      description: \"Missing {id}\"\n"
+        + "      detail: \"Missing {id} detail\"\n"
+        + "    required:\n"
         + "      id: String\n";
 
     Path temp = Files.createTempFile("edl", ".yml");
@@ -81,9 +85,11 @@ public class SpecParserTest {
         + "errors:\n"
         + "  invalidInput:\n"
         + "    category: Validation\n"
-        + "    code: 1\n"
-        + "    message: \"Bad {field} {missing}\"\n"
-        + "    params:\n"
+        + "    fixed:\n"
+        + "      code: 1\n"
+        + "      description: \"Bad {field} {missing}\"\n"
+        + "      detail: \"Bad {field} detail\"\n"
+        + "    required:\n"
         + "      field: String\n"
         + "      extra: String\n";
 

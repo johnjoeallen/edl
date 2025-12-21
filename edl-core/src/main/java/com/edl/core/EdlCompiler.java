@@ -32,7 +32,11 @@ public final class EdlCompiler {
     Validator validator = new Validator();
     ValidationResult validationResult = validator.validate(spec, document.getMarks(), specFile);
     diagnostics.addAll(validationResult.getDiagnostics());
-    if (validationResult.hasErrors()) {
+    if (options != null && options.isGenerateSpringHandler()) {
+      diagnostics.addAll(validateSpringHandlerRequirements(spec, document.getMarks(), specFile));
+    }
+    if (validationResult.hasErrors()
+        || diagnostics.stream().anyMatch(d -> d.getSeverity() == DiagnosticSeverity.ERROR)) {
       return new CompilationResult(List.of(), diagnostics);
     }
 
@@ -45,6 +49,25 @@ public final class EdlCompiler {
       generatedFiles.add(generator.generateSpringHandler(spec, outputDirectory));
     }
     return new CompilationResult(generatedFiles, diagnostics);
+  }
+
+  private List<Diagnostic> validateSpringHandlerRequirements(EdlSpec spec,
+                                                             java.util.Map<String, org.yaml.snakeyaml.error.Mark> marks,
+                                                             Path specFile) {
+    List<Diagnostic> diagnostics = new ArrayList<>();
+    String file = specFile == null ? null : specFile.toString();
+    for (CategoryDef category : spec.getCategories().values()) {
+      if (category.getHttpStatus() == null) {
+        String path = "categories." + category.getName() + ".httpStatus";
+        org.yaml.snakeyaml.error.Mark mark = marks.get(path);
+        Integer line = mark == null ? null : mark.getLine() + 1;
+        Integer column = mark == null ? null : mark.getColumn() + 1;
+        diagnostics.add(new Diagnostic(DiagnosticSeverity.ERROR,
+            "httpStatus is required when Spring handler generation is enabled",
+            path, file, line, column));
+      }
+    }
+    return diagnostics;
   }
 
   private Path writeDocs(EdlSpec spec, Path outputDirectory) throws IOException {

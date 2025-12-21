@@ -1,6 +1,7 @@
 package com.example.catalog;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.lang.Exception;
 import java.lang.Object;
 import java.lang.String;
 import java.util.LinkedHashMap;
@@ -14,14 +15,27 @@ public class CatalogExceptionHandler {
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   @ExceptionHandler(CatalogException.class)
-  public ResponseEntity<Map<String, Object>> handleCatalogException(
-      CatalogException exception) {
+  public ResponseEntity<Map<String, Object>> handleCatalogException(CatalogException exception) {
+    Map<String, Object> info = exception.errorInfo();
     Map<String, Object> body = new LinkedHashMap<>();
-    body.put("source", exception.source());
-    body.put("code", exception.code());
-    body.put("description", exception.errorInfo().get("description"));
-    body.put("recoverable", exception.recoverable());
-    body.put("details", toJson(exception.details()));
+    if (info.containsKey("source")) {
+      body.put("source", info.get("source"));
+    }
+    if (info.containsKey("code")) {
+      body.put("code", info.get("code"));
+    }
+    if (info.containsKey("description")) {
+      body.put("description", info.get("description"));
+    }
+    if (info.containsKey("detail")) {
+      body.put("detail", info.get("detail"));
+    }
+    if (info.containsKey("details")) {
+      body.put("details", toJson((Map<String, Object>) info.get("details")));
+    }
+    if (info.containsKey("recoverable")) {
+      body.put("recoverable", info.get("recoverable"));
+    }
     return ResponseEntity.status(500).body(body);
   }
 

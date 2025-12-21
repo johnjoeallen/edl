@@ -5,49 +5,20 @@ categories:
   Auth:
     codePrefix: AUTH
     httpStatus: 401
-  NotFound:
-    codePrefix: NF
-    httpStatus: 404
-  Validation:
-    codePrefix: VAL
-    httpStatus: 400
-  Billing:
-    codePrefix: BILL
-    retryable: true
+    params: # these are considered required for all exceptions of this category, and are the fields that go back in an HTTP error response
+      source: String
+      code: String
+      description: String
+      detail: String
+
 errors:
-  invalidToken:
+  fooError:
     category: Auth
-    code: 1
-    message: "Invalid token {tokenId}"
-    params:
-      tokenId: String
-  userMissing:
-    category: NotFound
-    code: 2
-    message: "User {userId} not found"
-    params:
+    fixed:
+      code: 1
+      description: "Userid invalid {userId}"
+      detail: "Userid {userId} does not exist"
+    required: # additional values  for this exception, maybe we just assume all {} in any member are required
       userId: String
-  skuMissing:
-    category: NotFound
-    code: 3
-    message: "SKU {sku} not found"
-    params:
-      sku: String
-  invalidPrice:
-    category: Validation
-    code: 4
-    message: "Invalid price {price}"
-    params:
-      price: java.math.BigDecimal
-  paymentDeclined:
-    category: Billing
-    code: 5
-    message: "Payment declined {paymentId}"
-    params:
-      paymentId: String
-  retryLater:
-    category: Billing
-    code: 6
-    message: "Retry later after {seconds}"
-    params:
-      seconds: int
+    optional:
+      - region

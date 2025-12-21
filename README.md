@@ -20,19 +20,26 @@ source: hello-service
 categories:
   Common:
     codePrefix: CM
+    httpStatus: 500
+    params:
+      source: String
+      code: String
+      description: String
+      detail: String
 errors:
   helloWorld:
     category: Common
-    code: 1
-    message: "Hello {name}"
-    params:
+    fixed:
+      code: 1
+      description: "Hello {name}"
+      detail: "Hello detail {name}"
+    required:
       name: String
-    requiredParams:
-      - name
 response:
   source: source
   code: code
   description: description
+  detail: detail
   recoverable: recoverable
   details: details
 ```
@@ -45,16 +52,28 @@ categories:
   Base:
     codePrefix: BASE
     httpStatus: 500
+    params:
+      source: String
+      code: String
+      description: String
+      detail: String
   Validation:
     parent: Base
     codePrefix: VAL
     httpStatus: 400
+    params:
+      source: String
+      code: String
+      description: String
+      detail: String
 errors:
   invalidEmail:
     category: Validation
-    code: "12"
-    message: "Invalid email {email}"
-    params:
+    fixed:
+      code: "12"
+      description: "Invalid email {email}"
+      detail: "Invalid email {email} detail"
+    required:
       email: String
 ```
 
@@ -65,8 +84,9 @@ Use `response` to rename fields in the Spring handler response. Keys are the cor
 response:
   source: source
   code: reasonCode
-  description: description
-  recoverable: recoverable
+  description: message
+  detail: detail
+  recoverable: canRecover
   details: detailsJson
 ```
 
@@ -75,14 +95,16 @@ response:
 public abstract class HelloRootException extends RuntimeException {
   private static final String SOURCE = "hello-service";
   private final String code;
-  private final String messageTemplate;
+  private final String descriptionTemplate;
+  private final String detailTemplate;
   private final Map<String, Object> details;
 
-  protected HelloRootException(String code, String messageTemplate, Map<String, Object> details,
-      Throwable cause) {
-    super(messageTemplate, cause);
+  protected HelloRootException(String code, String descriptionTemplate, String detailTemplate,
+      Map<String, Object> details, Throwable cause) {
+    super(descriptionTemplate, cause);
     this.code = Objects.requireNonNull(code, "code");
-    this.messageTemplate = Objects.requireNonNull(messageTemplate, "messageTemplate");
+    this.descriptionTemplate = Objects.requireNonNull(descriptionTemplate, "descriptionTemplate");
+    this.detailTemplate = Objects.requireNonNull(detailTemplate, "detailTemplate");
     this.details = Map.copyOf(Objects.requireNonNull(details, "details"));
   }
 
@@ -90,8 +112,20 @@ public abstract class HelloRootException extends RuntimeException {
     return code;
   }
 
-  public String messageTemplate() {
-    return messageTemplate;
+  public String descriptionTemplate() {
+    return descriptionTemplate;
+  }
+
+  public String detailTemplate() {
+    return detailTemplate;
+  }
+
+  public String description() {
+    return renderTemplate(descriptionTemplate, renderValues());
+  }
+
+  public String detail() {
+    return renderTemplate(detailTemplate, renderValues());
   }
 
   public Map<String, Object> details() {
@@ -107,13 +141,7 @@ public abstract class HelloRootException extends RuntimeException {
   }
 
   public Map<String, Object> errorInfo() {
-    return Map.ofEntries(
-      Map.entry("source", SOURCE),
-      Map.entry("code", code),
-      Map.entry("description", renderDescription(messageTemplate, details)),
-      Map.entry("details", details),
-      Map.entry("recoverable", recoverable())
-    );
+    return coreValues();
   }
 }
 ```
@@ -121,12 +149,13 @@ public abstract class HelloRootException extends RuntimeException {
 ```java
 public final class HelloWorldException extends CommonException {
   public static final String ERROR_CODE = "0001";
-  public static final String MESSAGE_TEMPLATE = "Hello {name}";
+  public static final String DESCRIPTION_TEMPLATE = "Hello {name}";
+  public static final String DETAIL_TEMPLATE = "Hello detail {name}";
   public static final boolean RECOVERABLE = false;
   private final String name;
 
   private HelloWorldException(String name, Map<String, Object> details, Throwable cause) {
-    super(ERROR_CODE, MESSAGE_TEMPLATE, details, cause);
+    super(ERROR_CODE, DESCRIPTION_TEMPLATE, DETAIL_TEMPLATE, details, cause);
     this.name = name;
   }
 
@@ -193,13 +222,13 @@ public final class HelloWorldException extends CommonException {
 ```
 
 ## 🌱 Spring Handler Generation
-Enable the Spring handler to generate a `@RestControllerAdvice` in the same package. The handler catches the root exception and returns a response with `source`, `code`, `description`, `recoverable`, and `details` where `details` is a JSON string. It uses Jackson `ObjectMapper`, so include `jackson-databind` at runtime.
+Enable the Spring handler to generate a `@RestControllerAdvice` in the same package. The handler catches the root exception and returns a response with `source`, `code`, `description`, `detail`, `recoverable`, and `details` where `details` is a JSON string. It uses Jackson `ObjectMapper`, so include `jackson-databind` at runtime. When this is enabled, every category must define `httpStatus`.
 
 ## 📖 Developer Guide
 See `DEV_GUIDE.md` for YAML examples, Maven usage, and generated exception usage.
 
 ## 🛠️ Troubleshooting
 - Ensure the YAML file is valid and uses the required keys
-- Check error messages for a YAML key path like `errors.userNotFound.code`
+- Check error messages for a YAML key path like `errors.userNotFound.fixed.code`
 - Verify category prefixes are unique across the spec
-- Confirm every message placeholder has a matching param and vice versa
+- Confirm every description/detail placeholder has a matching param and vice versa

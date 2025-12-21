@@ -40,12 +40,12 @@ public class GeneratedExceptionRuntimeTest {
         + "errors:\n"
         + "  helloWorld:\n"
         + "    category: Common\n"
-        + "    code: 1\n"
-        + "    message: \"Hello {name}\"\n"
-        + "    params:\n"
-        + "      name: String\n"
-        + "    requiredParams:\n"
-        + "      - name\n";
+        + "    fixed:\n"
+        + "      code: 1\n"
+        + "      description: \"Hello {name}\"\n"
+        + "      detail: \"Hello detail {name}\"\n"
+        + "    required:\n"
+        + "      name: String\n";
 
     Path spec = Files.createTempFile("edl-test", ".yml");
     Files.writeString(spec, yaml, StandardCharsets.UTF_8);
@@ -70,14 +70,20 @@ public class GeneratedExceptionRuntimeTest {
       Object exception = buildMethod.invoke(builder);
 
       Method getCode = exceptionClass.getMethod("code");
-      Method getMessageTemplate = exceptionClass.getMethod("messageTemplate");
+      Method getDescriptionTemplate = exceptionClass.getMethod("descriptionTemplate");
+      Method getDetailTemplate = exceptionClass.getMethod("detailTemplate");
+      Method getDescription = exceptionClass.getMethod("description");
+      Method getDetail = exceptionClass.getMethod("detail");
       Method getDetails = exceptionClass.getMethod("details");
       Method getErrorInfo = exceptionClass.getMethod("errorInfo");
       Method getSource = exceptionClass.getMethod("source");
       Method getRecoverable = exceptionClass.getMethod("recoverable");
 
       assertEquals("CM0001", getCode.invoke(exception));
-      assertEquals("Hello {name}", getMessageTemplate.invoke(exception));
+      assertEquals("Hello {name}", getDescriptionTemplate.invoke(exception));
+      assertEquals("Hello detail {name}", getDetailTemplate.invoke(exception));
+      assertEquals("Hello Ada", getDescription.invoke(exception));
+      assertEquals("Hello detail Ada", getDetail.invoke(exception));
       assertEquals("hello-service", getSource.invoke(exception));
       assertEquals(false, getRecoverable.invoke(exception));
 
@@ -91,6 +97,7 @@ public class GeneratedExceptionRuntimeTest {
       expected.put("source", "hello-service");
       expected.put("code", "CM0001");
       expected.put("description", "Hello Ada");
+      expected.put("detail", "Hello detail Ada");
       expected.put("details", Map.of("name", "Ada"));
       expected.put("recoverable", false);
       assertEquals(expected, errorInfo);

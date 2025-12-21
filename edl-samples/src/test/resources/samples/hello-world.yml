@@ -4,18 +4,25 @@ source: hello-service
 categories:
   Common:
     codePrefix: CM
+    httpStatus: 500
+    params:
+      source: String
+      code: String
+      description: String
+      detail: String
 errors:
   helloWorld:
     category: Common
-    code: 1
-    message: "Hello {name}"
-    params:
+    fixed:
+      code: 1
+      description: "Hello {name}"
+      detail: "Hello detail {name}"
+    required:
       name: String
-    requiredParams:
-      - name
 response:
   source: source
   code: reasonCode
-  description: description
-  recoverable: recoverable
+  description: message
+  detail: detail
+  recoverable: canRecover
   details: detailsJson

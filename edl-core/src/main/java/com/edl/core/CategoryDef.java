@@ -1,5 +1,7 @@
 package com.edl.core;
 
+import java.util.LinkedHashMap;
+
 public final class CategoryDef {
   private final String name;
   private final String parent;
@@ -7,19 +9,22 @@ public final class CategoryDef {
   private final Integer httpStatus;
   private final Boolean retryable;
   private final boolean isAbstract;
+  private final LinkedHashMap<String, String> params;
 
   public CategoryDef(String name,
                      String parent,
                      String codePrefix,
                      Integer httpStatus,
                      Boolean retryable,
-                     boolean isAbstract) {
+                     boolean isAbstract,
+                     LinkedHashMap<String, String> params) {
     this.name = name;
     this.parent = parent;
     this.codePrefix = codePrefix;
     this.httpStatus = httpStatus;
     this.retryable = retryable;
     this.isAbstract = isAbstract;
+    this.params = params;
   }
 
   public String getName() {
@@ -44,5 +49,9 @@ public final class CategoryDef {
 
   public boolean isAbstract() {
     return isAbstract;
+  }
+
+  public LinkedHashMap<String, String> getParams() {
+    return params;
   }
 }
