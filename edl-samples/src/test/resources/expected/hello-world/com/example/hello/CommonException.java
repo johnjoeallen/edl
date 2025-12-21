@@ -24,7 +24,7 @@ public abstract class CommonException extends HelloException {
     values.put("source", source());
     values.put("code", code());
     values.put("description", description());
-    values.put("details", details());
+    values.put("details", detail());
     return Map.copyOf(values);
   }
 }

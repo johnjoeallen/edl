@@ -1,7 +1,5 @@
 package com.example.hierarchy;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.lang.Exception;
 import java.lang.Object;
 import java.lang.String;
 import java.util.LinkedHashMap;
@@ -12,8 +10,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class HierarchyExceptionHandler {
-  private static final ObjectMapper MAPPER = new ObjectMapper();
-
   @ExceptionHandler(HierarchyException.class)
   public ResponseEntity<Map<String, Object>> handleHierarchyException(
       HierarchyException exception) {
@@ -29,7 +25,7 @@ public class HierarchyExceptionHandler {
       body.put("Description", info.get("description"));
     }
     if (info.containsKey("details")) {
-      body.put("Details", toJson((Map<String, Object>) info.get("details")));
+      body.put("Details", info.get("details"));
     }
     if (info.containsKey("recoverable")) {
       body.put("Recoverable", info.get("recoverable"));
@@ -37,11 +33,4 @@ public class HierarchyExceptionHandler {
     return ResponseEntity.status(exception.httpStatus()).body(body);
   }
 
-  private static String toJson(Map<String, Object> details) {
-    try {
-      return MAPPER.writeValueAsString(details);
-    } catch (Exception ex) {
-      return "{}";
-    }
-  }
 }

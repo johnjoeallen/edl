@@ -17,6 +17,8 @@ public final class HelloWorldException extends CommonException {
 
   public static final boolean RECOVERABLE = false;
 
+  private static final int HTTP_STATUS = 407;
+
   private final String name;
 
   private HelloWorldException(String name, Map<String, Object> details, Throwable cause) {

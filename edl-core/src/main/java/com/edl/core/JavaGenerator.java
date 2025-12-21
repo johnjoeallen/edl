@@ -335,7 +335,7 @@ public final class JavaGenerator {
       } else if ("recoverable".equals(name)) {
         coreValues.addStatement("values.put($S, recoverable())", name);
       } else if ("details".equals(name)) {
-        coreValues.addStatement("values.put($S, details())", name);
+        coreValues.addStatement("values.put($S, detail())", name);
       } else {
         coreValues.addStatement("values.put($S, $L)", name, name);
       }
@@ -692,7 +692,6 @@ public final class JavaGenerator {
     ClassName restControllerAdvice = ClassName.get("org.springframework.web.bind.annotation", "RestControllerAdvice");
     ClassName exceptionHandler = ClassName.get("org.springframework.web.bind.annotation", "ExceptionHandler");
     ClassName responseEntity = ClassName.get("org.springframework.http", "ResponseEntity");
-    ClassName objectMapper = ClassName.get("com.fasterxml.jackson.databind", "ObjectMapper");
     ClassName linkedHashMap = ClassName.get(LinkedHashMap.class);
     ClassName mapType = ClassName.get(Map.class);
     TypeName mapStringObject = ParameterizedTypeName.get(mapType, ClassName.get(String.class), ClassName.get(Object.class));
@@ -700,10 +699,6 @@ public final class JavaGenerator {
     TypeSpec.Builder type = TypeSpec.classBuilder(baseExceptionName(spec) + "Handler")
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(restControllerAdvice);
-
-    type.addField(FieldSpec.builder(objectMapper, "MAPPER", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
-        .initializer("new $T()", objectMapper)
-        .build());
 
     ClassName rootType = ClassName.get(spec.getPackageName(), baseExceptionName(spec));
     MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("handle" + baseExceptionName(spec))
@@ -718,29 +713,12 @@ public final class JavaGenerator {
     for (Map.Entry<String, String> entry : spec.getResponseFields().entrySet()) {
       String key = entry.getKey();
       String responseKey = entry.getValue();
-      if ("details".equals(key)) {
-        methodBuilder.beginControlFlow("if (info.containsKey($S))", key)
-            .addStatement("body.put($S, toJson(($T) info.get($S)))", responseKey, mapStringObject, key)
-            .endControlFlow();
-      } else {
-        methodBuilder.beginControlFlow("if (info.containsKey($S))", key)
-            .addStatement("body.put($S, info.get($S))", responseKey, key)
-            .endControlFlow();
-      }
+      methodBuilder.beginControlFlow("if (info.containsKey($S))", key)
+          .addStatement("body.put($S, info.get($S))", responseKey, key)
+          .endControlFlow();
     }
     methodBuilder.addStatement("return $T.status(exception.httpStatus()).body(body)", responseEntity);
     type.addMethod(methodBuilder.build());
-
-    type.addMethod(MethodSpec.methodBuilder("toJson")
-        .addModifiers(Modifier.PRIVATE, Modifier.STATIC)
-        .returns(String.class)
-        .addParameter(mapStringObject, "details")
-        .beginControlFlow("try")
-        .addStatement("return MAPPER.writeValueAsString(details)")
-        .nextControlFlow("catch ($T ex)", Exception.class)
-        .addStatement("return $S", "{}")
-        .endControlFlow()
-        .build());
 
     return type.build();
   }

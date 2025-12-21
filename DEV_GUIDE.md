@@ -79,6 +79,7 @@ categories:
 errors:
   paymentDeclined:
     category: Billing
+    httpStatus: 403
     fixed:
       code: 5
       description: "Payment declined {paymentId}"
@@ -127,7 +128,7 @@ The `deployment/` folder includes helper scripts for Maven deploy workflows:
 See `deployment/README.md` for full usage.
 
 ## 🧩 Spring Handler Generation
-Enable the Spring handler to generate a `@RestControllerAdvice` in the same package as the exceptions. The handler catches the base exception type and returns the `httpStatus` configured on the category (or the error override if provided). When Spring handler generation is enabled, base classes include an `httpStatus` field that is passed through constructors. It uses Jackson `ObjectMapper`, so include `jackson-databind` at runtime.
+Enable the Spring handler to generate a `@RestControllerAdvice` in the same package as the exceptions. The handler catches the base exception type and returns the `httpStatus` configured on the category (or the error override if provided). When Spring handler generation is enabled, base classes include an `httpStatus` field that is passed through constructors. When handler generation is enabled, every category must define `httpStatus`.
 
 ```xml
 <configuration>
@@ -135,7 +136,7 @@ Enable the Spring handler to generate a `@RestControllerAdvice` in the same pack
 </configuration>
 ```
 
-The response map is built from your `response` mapping (for example `source`, `code`, `description`, `details`, `recoverable`) where `details` is a JSON string. When handler generation is enabled, every category must define `httpStatus`.
+The response map is built from your `response` mapping (for example `source`, `code`, `description`, `details`, `recoverable`) where `details` is the rendered details message. When handler generation is enabled, every category must define `httpStatus`.
 
 ## ☕ Using Generated Exceptions
 ```java
@@ -153,6 +154,6 @@ Map<String, Object> info = exception.errorInfo();
 ```
 
 Notes:
-- `errorInfo().description` and `errorInfo().detail` are the templates expanded with `details`.
+- `errorInfo().description` and `errorInfo().detail` are the templates expanded with params from the builder.
 - `details` contains only the typed params from the builder.
 - `recoverable` defaults to `false` unless set in the error.

@@ -98,7 +98,7 @@ public class GeneratedExceptionRuntimeTest {
       expected.put("code", "CM0001");
       expected.put("description", "Hello Ada");
       expected.put("detail", "Hello detail Ada");
-      expected.put("details", Map.of("name", "Ada"));
+      expected.put("details", "Hello detail Ada");
       expected.put("recoverable", false);
       assertEquals(expected, errorInfo);
     } finally {
