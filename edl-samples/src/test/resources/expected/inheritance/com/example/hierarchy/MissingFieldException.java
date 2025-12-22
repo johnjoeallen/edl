@@ -60,5 +60,9 @@ public final class MissingFieldException extends InputException {
       details.put("field", resolvedField);
       return new MissingFieldException(resolvedField, details, cause);
     }
+
+    public void throwException() {
+      throw build();
+    }
   }
 }

@@ -26,6 +26,7 @@ public final class SpecParser {
     String source = readString(map, diagnostics, file, marks, "source", true);
     Map<String, Object> options = readMap(map, diagnostics, file, marks, "options", false);
     LinkedHashMap<String, String> responseFields = readStringMap(map, diagnostics, file, marks, "response", false);
+    Map<String, Object> containerResponse = readMap(map, diagnostics, file, marks, "containerResponse", false);
     LinkedHashMap<String, CategoryDef> categories = readCategories(map, diagnostics, file, marks);
     LinkedHashMap<String, ErrorDef> errors = readErrors(map, diagnostics, file, marks);
 
@@ -36,7 +37,20 @@ public final class SpecParser {
     if (responseFields == null) {
       responseFields = defaultResponseFields();
     }
-    EdlSpec spec = new EdlSpec(packageName, baseException, source, options, responseFields, categories, errors);
+    String containerWrapperKey = "errors";
+    String containerItemKey = "error";
+    if (containerResponse != null && !containerResponse.isEmpty()) {
+      String wrapper = readString(containerResponse, diagnostics, file, marks, "containerResponse.wrapper", false);
+      String item = readString(containerResponse, diagnostics, file, marks, "containerResponse.item", false);
+      if (wrapper != null && !wrapper.isBlank()) {
+        containerWrapperKey = wrapper;
+      }
+      if (item != null && !item.isBlank()) {
+        containerItemKey = item;
+      }
+    }
+    EdlSpec spec = new EdlSpec(packageName, baseException, source, options,
+        containerWrapperKey, containerItemKey, responseFields, categories, errors);
     return new ParseResult(spec, diagnostics);
   }
 
@@ -68,15 +82,17 @@ public final class SpecParser {
       Integer httpStatus = readInteger(categoryMap, diagnostics, file, marks, path + ".httpStatus", false);
       Boolean retryable = readBoolean(categoryMap, diagnostics, file, marks, path + ".retryable", false);
       Boolean abstractFlag = readBoolean(categoryMap, diagnostics, file, marks, path + ".abstract", false);
+      Boolean containerFlag = readBoolean(categoryMap, diagnostics, file, marks, path + ".container", false);
       LinkedHashMap<String, String> params = readStringMap(categoryMap, diagnostics, file, marks, path + ".params", false);
       boolean isAbstract = abstractFlag == null || abstractFlag;
+      boolean isContainer = containerFlag != null && containerFlag;
       if (codePrefix == null) {
         continue;
       }
       if (params == null) {
         params = new LinkedHashMap<>();
       }
-      categories.put(name, new CategoryDef(name, parent, codePrefix, httpStatus, retryable, isAbstract, params));
+      categories.put(name, new CategoryDef(name, parent, codePrefix, httpStatus, retryable, isAbstract, isContainer, params));
     }
     return categories;
   }

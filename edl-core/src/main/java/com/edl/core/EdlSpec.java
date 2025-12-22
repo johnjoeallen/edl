@@ -8,6 +8,8 @@ public final class EdlSpec {
   private final String baseException;
   private final String source;
   private final Map<String, Object> options;
+  private final String containerWrapperKey;
+  private final String containerItemKey;
   private final LinkedHashMap<String, String> responseFields;
   private final LinkedHashMap<String, CategoryDef> categories;
   private final LinkedHashMap<String, ErrorDef> errors;
@@ -16,6 +18,8 @@ public final class EdlSpec {
                  String baseException,
                  String source,
                  Map<String, Object> options,
+                 String containerWrapperKey,
+                 String containerItemKey,
                  LinkedHashMap<String, String> responseFields,
                  LinkedHashMap<String, CategoryDef> categories,
                  LinkedHashMap<String, ErrorDef> errors) {
@@ -23,6 +27,8 @@ public final class EdlSpec {
     this.baseException = baseException;
     this.source = source;
     this.options = options;
+    this.containerWrapperKey = containerWrapperKey;
+    this.containerItemKey = containerItemKey;
     this.responseFields = responseFields;
     this.categories = categories;
     this.errors = errors;
@@ -42,6 +48,14 @@ public final class EdlSpec {
 
   public Map<String, Object> getOptions() {
     return options;
+  }
+
+  public String getContainerWrapperKey() {
+    return containerWrapperKey;
+  }
+
+  public String getContainerItemKey() {
+    return containerItemKey;
   }
 
   public LinkedHashMap<String, String> getResponseFields() {

@@ -9,6 +9,7 @@ public final class CategoryDef {
   private final Integer httpStatus;
   private final Boolean retryable;
   private final boolean isAbstract;
+  private final boolean container;
   private final LinkedHashMap<String, String> params;
 
   public CategoryDef(String name,
@@ -17,6 +18,7 @@ public final class CategoryDef {
                      Integer httpStatus,
                      Boolean retryable,
                      boolean isAbstract,
+                     boolean container,
                      LinkedHashMap<String, String> params) {
     this.name = name;
     this.parent = parent;
@@ -24,6 +26,7 @@ public final class CategoryDef {
     this.httpStatus = httpStatus;
     this.retryable = retryable;
     this.isAbstract = isAbstract;
+    this.container = container;
     this.params = params;
   }
 
@@ -49,6 +52,10 @@ public final class CategoryDef {
 
   public boolean isAbstract() {
     return isAbstract;
+  }
+
+  public boolean isContainer() {
+    return container;
   }
 
   public LinkedHashMap<String, String> getParams() {

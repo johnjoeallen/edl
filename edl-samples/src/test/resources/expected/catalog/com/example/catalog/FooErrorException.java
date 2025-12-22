@@ -77,5 +77,9 @@ public final class FooErrorException extends AuthException {
       details.put("region", resolvedRegion);
       return new FooErrorException(resolvedUserId, resolvedRegion, details, cause);
     }
+
+    public void throwException() {
+      throw build();
+    }
   }
 }

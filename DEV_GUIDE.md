@@ -18,6 +18,7 @@ Category fields:
 - `httpStatus` optional int (required when Spring handler generation is enabled)
 - `retryable` optional boolean
 - `abstract` optional boolean, default true
+- `container` optional boolean, default false (generates a `${Category}ContainerException`)
 - `params` optional map of core param names to Java type strings
 
 Base exception name:
@@ -34,6 +35,9 @@ Error fields:
 - `recoverable` optional boolean, default false
 - `httpStatus` optional int to override the category `httpStatus`
 - `response` optional map of core field name to response field name
+- `containerResponse` optional map:
+  - `wrapper` optional string, default `errors`
+  - `item` optional string, default `error`
 
 ## 🧪 YAML Examples
 Small hello world:
@@ -138,11 +142,17 @@ Enable the Spring handler to generate a `@RestControllerAdvice` in the same pack
 
 The response map is built from your `response` mapping (for example `source`, `code`, `description`, `details`, `recoverable`) where `details` is the rendered details message. When handler generation is enabled, every category must define `httpStatus`.
 
+If a category sets `container: true`, a `${Category}ContainerException` is generated. It is a sibling of the category base exception and can hold a list of that category’s exceptions via `add` and `addAll`. The Spring handler renders it as a wrapper object containing an array of mapped errors using `containerResponse.wrapper` and `containerResponse.item`.
+
 ## ☕ Using Generated Exceptions
 ```java
 HelloWorldException exception = HelloWorldException.builder()
     .name("Ada")
     .build();
+
+HelloWorldException.builder()
+    .name("Ada")
+    .throwException();
 
 String code = exception.code();
 String template = exception.descriptionTemplate();

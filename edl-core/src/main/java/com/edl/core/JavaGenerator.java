@@ -62,6 +62,13 @@ public final class JavaGenerator {
           buildCategoryException(spec, category, categoryTypes)).indent("  ").build();
       generatedFiles.add(writeIfChanged(packageDir, categoryFile));
     }
+    for (CategoryDef category : spec.getCategories().values()) {
+      if (category.isContainer()) {
+        JavaFile containerFile = JavaFile.builder(spec.getPackageName(),
+            buildCategoryContainerException(spec, category, categoryTypes)).indent("  ").build();
+        generatedFiles.add(writeIfChanged(packageDir, containerFile));
+      }
+    }
 
     for (ErrorDef error : spec.getErrors().values()) {
       CategoryDef category = spec.getCategories().get(error.getCategory());
@@ -346,6 +353,78 @@ public final class JavaGenerator {
     return type.build();
   }
 
+  private TypeSpec buildCategoryContainerException(EdlSpec spec,
+                                                   CategoryDef category,
+                                                   Map<String, ClassName> categoryTypes) {
+    ClassName rootClass = ClassName.get(spec.getPackageName(), baseExceptionName(spec));
+    ClassName categoryType = categoryTypes.get(category.getName());
+    ClassName listType = ClassName.get(List.class);
+    ClassName arrayListType = ClassName.get(ArrayList.class);
+    ClassName mapType = ClassName.get(Map.class);
+    TypeName listCategory = ParameterizedTypeName.get(listType, categoryType);
+    TypeName mapStringObject = ParameterizedTypeName.get(mapType, ClassName.get(String.class), ClassName.get(Object.class));
+
+    TypeSpec.Builder type = TypeSpec.classBuilder(category.getName() + "ContainerException")
+        .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+        .superclass(rootClass);
+
+    if (includeHttpStatus) {
+      type.addField(FieldSpec.builder(int.class, "HTTP_STATUS", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+          .initializer("$L", category.getHttpStatus())
+          .build());
+    }
+
+    type.addField(FieldSpec.builder(listCategory, "errors", Modifier.PRIVATE, Modifier.FINAL)
+        .initializer("new $T<>()", arrayListType)
+        .build());
+
+    MethodSpec.Builder constructorBuilder = MethodSpec.constructorBuilder()
+        .addModifiers(Modifier.PUBLIC);
+    if (includeHttpStatus) {
+      constructorBuilder.addStatement("super($S, HTTP_STATUS, $S, $S, $T.of(), null)", "", "", "", Map.class);
+    } else {
+      constructorBuilder.addStatement("super($S, $S, $S, $T.of(), null)", "", "", "", Map.class);
+    }
+    type.addMethod(constructorBuilder.build());
+
+    type.addMethod(MethodSpec.methodBuilder("add")
+        .addModifiers(Modifier.PUBLIC)
+        .returns(void.class)
+        .addParameter(categoryType, "error")
+        .addStatement("errors.add($T.requireNonNull(error, $S))", Objects.class, "error")
+        .build());
+
+    ClassName collectionType = ClassName.get("java.util", "Collection");
+    TypeName collectionCategory = ParameterizedTypeName.get(collectionType, WildcardTypeName.subtypeOf(categoryType));
+    type.addMethod(MethodSpec.methodBuilder("addAll")
+        .addModifiers(Modifier.PUBLIC)
+        .returns(void.class)
+        .addParameter(collectionCategory, "errors")
+        .addStatement("this.errors.addAll($T.requireNonNull(errors, $S))", Objects.class, "errors")
+        .build());
+
+    type.addMethod(MethodSpec.methodBuilder("errors")
+        .addModifiers(Modifier.PUBLIC)
+        .returns(listCategory)
+        .addStatement("return $T.copyOf(errors)", List.class)
+        .build());
+
+    type.addMethod(MethodSpec.methodBuilder("recoverable")
+        .addModifiers(Modifier.PUBLIC)
+        .returns(boolean.class)
+        .addStatement("return false")
+        .build());
+
+    type.addMethod(MethodSpec.methodBuilder("coreValues")
+        .addAnnotation(Override.class)
+        .addModifiers(Modifier.PROTECTED)
+        .returns(mapStringObject)
+        .addStatement("return $T.of()", Map.class)
+        .build());
+
+    return type.build();
+  }
+
   private TypeSpec buildErrorException(EdlSpec spec,
                                        CategoryDef category,
                                        ErrorDef error,
@@ -577,6 +656,11 @@ public final class JavaGenerator {
     buildMethod.addStatement("return new $T($L)", exceptionType, constructorArgs.toString());
 
     builder.addMethod(buildMethod.build());
+    builder.addMethod(MethodSpec.methodBuilder("throwException")
+        .addModifiers(Modifier.PUBLIC)
+        .returns(void.class)
+        .addStatement("throw build()")
+        .build());
     return builder.build();
   }
 
@@ -708,17 +792,45 @@ public final class JavaGenerator {
             .build())
         .addParameter(rootType, "exception")
         .returns(ParameterizedTypeName.get(responseEntity, mapStringObject))
-        .addStatement("$T info = exception.errorInfo()", mapStringObject)
-        .addStatement("$T body = new $T<>()", mapStringObject, linkedHashMap);
-    for (Map.Entry<String, String> entry : spec.getResponseFields().entrySet()) {
-      String key = entry.getKey();
-      String responseKey = entry.getValue();
-      methodBuilder.beginControlFlow("if (info.containsKey($S))", key)
-          .addStatement("body.put($S, info.get($S))", responseKey, key)
+        .addStatement("$T body = mapResponse(exception.errorInfo())", mapStringObject);
+
+    for (CategoryDef category : spec.getCategories().values()) {
+      if (!category.isContainer()) {
+        continue;
+      }
+      ClassName containerType = ClassName.get(spec.getPackageName(), category.getName() + "ContainerException");
+      ClassName categoryType = ClassName.get(spec.getPackageName(), category.getName() + "Exception");
+      TypeName listResponse = ParameterizedTypeName.get(ClassName.get(List.class), mapStringObject);
+      methodBuilder.beginControlFlow("if (exception instanceof $T)", containerType)
+          .addStatement("$T container = ($T) exception", containerType, containerType)
+          .addStatement("$T errors = new $T<>()", listResponse, ArrayList.class)
+          .beginControlFlow("for ($T error : container.errors())", categoryType)
+          .addStatement("$T entry = new $T<>()", mapStringObject, linkedHashMap)
+          .addStatement("entry.put($S, mapResponse(error.errorInfo()))", spec.getContainerItemKey())
+          .addStatement("errors.add(entry)")
+          .endControlFlow()
+          .addStatement("$T wrapper = new $T<>()", mapStringObject, linkedHashMap)
+          .addStatement("wrapper.put($S, errors)", spec.getContainerWrapperKey())
+          .addStatement("return $T.status(exception.httpStatus()).body(wrapper)", responseEntity)
           .endControlFlow();
     }
     methodBuilder.addStatement("return $T.status(exception.httpStatus()).body(body)", responseEntity);
     type.addMethod(methodBuilder.build());
+
+    MethodSpec.Builder mapResponse = MethodSpec.methodBuilder("mapResponse")
+        .addModifiers(Modifier.PRIVATE, Modifier.STATIC)
+        .returns(mapStringObject)
+        .addParameter(mapStringObject, "info")
+        .addStatement("$T body = new $T<>()", mapStringObject, linkedHashMap);
+    for (Map.Entry<String, String> entry : spec.getResponseFields().entrySet()) {
+      String key = entry.getKey();
+      String responseKey = entry.getValue();
+      mapResponse.beginControlFlow("if (info.containsKey($S))", key)
+          .addStatement("body.put($S, info.get($S))", responseKey, key)
+          .endControlFlow();
+    }
+    mapResponse.addStatement("return body");
+    type.addMethod(mapResponse.build());
 
     return type.build();
   }

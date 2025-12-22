@@ -60,5 +60,9 @@ public final class InvalidEmailException extends ValidationException {
       details.put("email", resolvedEmail);
       return new InvalidEmailException(resolvedEmail, details, cause);
     }
+
+    public void throwException() {
+      throw build();
+    }
   }
 }

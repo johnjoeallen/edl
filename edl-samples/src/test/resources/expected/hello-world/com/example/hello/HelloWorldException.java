@@ -62,5 +62,9 @@ public final class HelloWorldException extends CommonException {
       details.put("name", resolvedName);
       return new HelloWorldException(resolvedName, details, cause);
     }
+
+    public void throwException() {
+      throw build();
+    }
   }
 }

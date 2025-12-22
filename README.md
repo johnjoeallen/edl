@@ -21,6 +21,7 @@ categories:
   Common:
     codePrefix: CM
     httpStatus: 500
+    container: true
     params:
       source: String
       code: String
@@ -41,6 +42,9 @@ response:
   description: Description
   details: Details
   recoverable: Recoverable
+containerResponse:
+  wrapper: errors
+  item: error
 ```
 
 ```yaml
@@ -229,6 +233,8 @@ See `deployment/README.md` for full usage and examples.
 
 ## 🌱 Spring Handler Generation
 Enable the Spring handler to generate a `@RestControllerAdvice` in the same package. The handler catches the base exception and returns the `httpStatus` configured on the category (or the error override if provided), with a response built from your `response` mapping (for example `source`, `code`, `description`, `details`, `recoverable`), where `details` is the rendered details message. When Spring handler generation is enabled, the generated base classes carry an `httpStatus` field and pass it through constructors. When handler generation is enabled, every category must define `httpStatus`.
+
+If a category has `container: true`, a `${Category}ContainerException` is generated as a sibling to the category base exception. The Spring handler renders it as a wrapper object containing an array of mapped errors, using `containerResponse.wrapper` and `containerResponse.item`.
 
 ## 📖 Developer Guide
 See `DEV_GUIDE.md` for YAML examples, Maven usage, and generated exception usage.
