@@ -36,6 +36,11 @@ public class GoldenFileTest {
     assertGolden("catalog");
   }
 
+  @Test
+  void errorListSampleMatchesGoldenFiles() throws Exception {
+    assertGolden("error-list");
+  }
+
   private void assertGolden(String sampleName) throws Exception {
     Path sample = Path.of("src", "test", "resources", "samples", sampleName + ".yaml");
     Path expectedDir = Path.of("src", "test", "resources", "expected", sampleName);

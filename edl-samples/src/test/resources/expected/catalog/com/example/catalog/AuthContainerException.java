@@ -1,0 +1,9 @@
+package com.example.catalog;
+
+public final class AuthContainerException extends ContainerExceptionBase {
+  private static final int HTTP_STATUS = 401;
+
+  public AuthContainerException() {
+    super(HTTP_STATUS);
+  }
+}

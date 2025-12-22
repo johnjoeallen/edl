@@ -1,0 +1,42 @@
+package: com.example.edlsample
+baseException: Sample
+source: sample-service
+categories:
+  Common:
+    codePrefix: CM
+    httpStatus: 400
+    container: true
+    params:
+      source: String
+      code: String
+      description: String
+      details: String
+      recoverable: boolean
+errors:
+  missingName:
+    category: Common
+    fixed:
+      code: 1
+      description: "Missing name"
+      details: "Name is required"
+  invalidName:
+    category: Common
+    fixed:
+      code: 2
+      description: "Invalid name {name}"
+      details: "Name {name} is invalid"
+    required:
+      name: String
+response:
+  source: Source
+  code: ReasonCode
+  description: Description
+  details: Details
+  recoverable: Recoverable
+containerResponse:
+  Error:
+    - Source: source
+      ReasonCode: code
+      Description: description
+      Details: details
+      Recoverable: recoverable

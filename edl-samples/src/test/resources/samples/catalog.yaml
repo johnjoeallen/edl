@@ -5,11 +5,13 @@ categories:
   Auth:
     codePrefix: AUTH
     httpStatus: 401
+    container: true
     params: # these are considered required for all exceptions of this category, and are the fields that go back in an HTTP error response
       source: String
       code: String
       description: String
       details: String
+      recoverable: boolean
 
 errors:
   fooError:
@@ -28,3 +30,10 @@ response:
   description: Description
   details: Details
   recoverable: Recoverable
+containerResponse:
+  Error:
+    - Source: source
+      ReasonCode: code
+      Description: description
+      Details: details
+      Recoverable: recoverable

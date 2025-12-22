@@ -25,6 +25,7 @@ public abstract class AuthException extends CatalogException {
     values.put("code", code());
     values.put("description", description());
     values.put("details", detail());
+    values.put("recoverable", recoverable());
     return Map.copyOf(values);
   }
 }

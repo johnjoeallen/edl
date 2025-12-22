@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class HelloExceptionHandler extends ExceptionHandlerBase {
-
   @ExceptionHandler(HelloException.class)
   public ResponseEntity<Map<String, Object>> handleHelloException(HelloException exception) {
     Map<String, Object> body = mapResponse(exception.errorInfo());

@@ -35,9 +35,7 @@ Error fields:
 - `recoverable` optional boolean, default false
 - `httpStatus` optional int to override the category `httpStatus`
 - `response` optional map of core field name to response field name
-- `containerResponse` optional map:
-  - `wrapper` optional string, default `errors`
-  - `item` optional string, default `error`
+- `containerResponse` optional template map used for container responses
 
 ## 🧪 YAML Examples
 Small hello world:
@@ -54,6 +52,7 @@ categories:
       code: String
       description: String
       details: String
+      recoverable: boolean
 errors:
   helloWorld:
     category: Common
@@ -100,6 +99,47 @@ response:
   recoverable: Recoverable
 ```
 
+Container response without an Errors wrapper:
+```yaml
+package: com.example.catalog
+baseException: Catalog
+source: catalog-service
+categories:
+  Auth:
+    codePrefix: AUTH
+    httpStatus: 401
+    container: true
+    params:
+      source: String
+      code: String
+      description: String
+      details: String
+errors:
+  fooError:
+    category: Auth
+    fixed:
+      code: 1
+      description: "Userid invalid {userId}"
+      details: "Userid {userId} does not exist"
+    required:
+      userId: String
+    optional:
+      - region
+response:
+  source: Source
+  code: ReasonCode
+  description: Description
+  details: Details
+  recoverable: Recoverable
+containerResponse:
+  Error:
+    - Source: source
+      ReasonCode: code
+      Description: description
+      Details: details
+      Recoverable: recoverable
+```
+
 ## 🔌 Maven Plugin Usage
 ```xml
 <plugin>
@@ -142,7 +182,7 @@ Enable the Spring handler to generate a `@RestControllerAdvice` in the same pack
 
 The response map is built from your `response` mapping (for example `source`, `code`, `description`, `details`, `recoverable`) where `details` is the rendered details message. When handler generation is enabled, every category must define `httpStatus`.
 
-If a category sets `container: true`, a `${Category}ContainerException` is generated. It is a sibling of the category base exception and can hold a list of that category’s exceptions via `add` and `addAll`. The Spring handler renders it as a wrapper object containing an array of mapped errors using `containerResponse.wrapper` and `containerResponse.item`.
+If a category sets `container: true`, a `${Category}ContainerException` is generated. It is a sibling of the category base exception and can hold a list of that category’s exceptions via `add` and `addAll`. The Spring handler renders it using the `containerResponse` template; any string values are treated as keys looked up from `errorInfo`.
 
 ## ☕ Using Generated Exceptions
 ```java

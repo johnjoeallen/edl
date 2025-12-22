@@ -1,0 +1,75 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2025-12-22T17:40:00.000Z",
+  "__export_source": "edl-spring-sample",
+  "resources": [
+    {
+      "_id": "wrk_edl_sample",
+      "_type": "workspace",
+      "name": "EDL Spring Sample",
+      "description": "Sample requests for the EDL Spring Boot app"
+    },
+    {
+      "_id": "env_edl_base",
+      "_type": "environment",
+      "parentId": "wrk_edl_sample",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:8080"
+      }
+    },
+    {
+      "_id": "req_get_missing",
+      "_type": "request",
+      "parentId": "wrk_edl_sample",
+      "name": "GET /api/hello (missing name)",
+      "method": "GET",
+      "url": "{{ base_url }}/api/hello"
+    },
+    {
+      "_id": "req_get_name",
+      "_type": "request",
+      "parentId": "wrk_edl_sample",
+      "name": "GET /api/hello?name=Ada",
+      "method": "GET",
+      "url": "{{ base_url }}/api/hello?name=Ada"
+    },
+    {
+      "_id": "req_post_name",
+      "_type": "request",
+      "parentId": "wrk_edl_sample",
+      "name": "POST /api/hello",
+      "method": "POST",
+      "url": "{{ base_url }}/api/hello",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"name\":\"Ada\"}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    {
+      "_id": "req_post_wrapped",
+      "_type": "request",
+      "parentId": "wrk_edl_sample",
+      "name": "POST /api/wrapped",
+      "method": "POST",
+      "url": "{{ base_url }}/api/wrapped",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"name\":\"Ada\"}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    }
+  ]
+}

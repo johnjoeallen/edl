@@ -29,10 +29,9 @@ response:
   details: Details
   recoverable: Recoverable
 containerResponse:
-  Errors:
-    - Error:
-        Source: source
-        ReasonCode: code
-        Description: description
-        Details: details
-        Recoverable: recoverable
+  Error:
+    - Source: source
+      ReasonCode: code
+      Description: description
+      Details: details
+      Recoverable: recoverable

@@ -7,6 +7,7 @@ import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.WildcardTypeName;
@@ -62,6 +63,12 @@ public final class JavaGenerator {
           buildCategoryException(spec, category, categoryTypes)).indent("  ").build();
       generatedFiles.add(writeIfChanged(packageDir, categoryFile));
     }
+    boolean hasContainerCategories = spec.getCategories().values().stream().anyMatch(CategoryDef::isContainer);
+    if (hasContainerCategories) {
+      JavaFile containerBaseFile = JavaFile.builder(spec.getPackageName(),
+          buildContainerBaseException(spec)).indent("  ").build();
+      generatedFiles.add(writeIfChanged(packageDir, containerBaseFile));
+    }
     for (CategoryDef category : spec.getCategories().values()) {
       if (category.isContainer()) {
         JavaFile containerFile = JavaFile.builder(spec.getPackageName(),
@@ -83,7 +90,9 @@ public final class JavaGenerator {
   public Path generateSpringHandler(EdlSpec spec, Path outputDirectory) throws IOException {
     Path packageDir = outputDirectory.resolve(spec.getPackageName().replace('.', '/'));
     Files.createDirectories(packageDir);
+    JavaFile baseHandlerFile = JavaFile.builder(spec.getPackageName(), buildSpringHandlerBase(spec)).indent("  ").build();
     JavaFile handlerFile = JavaFile.builder(spec.getPackageName(), buildSpringHandler(spec)).indent("  ").build();
+    writeIfChanged(packageDir, baseHandlerFile);
     return writeIfChanged(packageDir, handlerFile);
   }
 
@@ -356,17 +365,10 @@ public final class JavaGenerator {
   private TypeSpec buildCategoryContainerException(EdlSpec spec,
                                                    CategoryDef category,
                                                    Map<String, ClassName> categoryTypes) {
-    ClassName rootClass = ClassName.get(spec.getPackageName(), baseExceptionName(spec));
-    ClassName categoryType = categoryTypes.get(category.getName());
-    ClassName listType = ClassName.get(List.class);
-    ClassName arrayListType = ClassName.get(ArrayList.class);
-    ClassName mapType = ClassName.get(Map.class);
-    TypeName listCategory = ParameterizedTypeName.get(listType, categoryType);
-    TypeName mapStringObject = ParameterizedTypeName.get(mapType, ClassName.get(String.class), ClassName.get(Object.class));
-
+    ClassName containerBase = ClassName.get(spec.getPackageName(), "ContainerExceptionBase");
     TypeSpec.Builder type = TypeSpec.classBuilder(category.getName() + "ContainerException")
         .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-        .superclass(rootClass);
+        .superclass(containerBase);
 
     if (includeHttpStatus) {
       type.addField(FieldSpec.builder(int.class, "HTTP_STATUS", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
@@ -374,28 +376,56 @@ public final class JavaGenerator {
           .build());
     }
 
-    type.addField(FieldSpec.builder(listCategory, "errors", Modifier.PRIVATE, Modifier.FINAL)
+    MethodSpec.Builder constructorBuilder = MethodSpec.constructorBuilder()
+        .addModifiers(Modifier.PUBLIC);
+    if (includeHttpStatus) {
+      constructorBuilder.addStatement("super(HTTP_STATUS)");
+    } else {
+      constructorBuilder.addStatement("super()");
+    }
+    type.addMethod(constructorBuilder.build());
+
+    return type.build();
+  }
+
+  private TypeSpec buildContainerBaseException(EdlSpec spec) {
+    ClassName rootClass = ClassName.get(spec.getPackageName(), baseExceptionName(spec));
+    ClassName listType = ClassName.get(List.class);
+    ClassName arrayListType = ClassName.get(ArrayList.class);
+    ClassName collectionType = ClassName.get("java.util", "Collection");
+    TypeName listCategory = ParameterizedTypeName.get(listType, rootClass);
+    TypeName collectionCategory = ParameterizedTypeName.get(collectionType, WildcardTypeName.subtypeOf(rootClass));
+
+    TypeSpec.Builder type = TypeSpec.classBuilder("ContainerExceptionBase")
+        .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+        .superclass(ClassName.get(RuntimeException.class));
+
+    if (includeHttpStatus) {
+      type.addField(FieldSpec.builder(int.class, "httpStatus", Modifier.PRIVATE, Modifier.FINAL).build());
+    }
+
+    type.addField(FieldSpec.builder(listCategory, "errors", Modifier.PROTECTED, Modifier.FINAL)
         .initializer("new $T<>()", arrayListType)
         .build());
 
     MethodSpec.Builder constructorBuilder = MethodSpec.constructorBuilder()
-        .addModifiers(Modifier.PUBLIC);
+        .addModifiers(Modifier.PROTECTED);
     if (includeHttpStatus) {
-      constructorBuilder.addStatement("super($S, HTTP_STATUS, $S, $S, $T.of(), null)", "", "", "", Map.class);
+      constructorBuilder.addParameter(int.class, "httpStatus")
+          .addStatement("super()")
+          .addStatement("this.httpStatus = httpStatus");
     } else {
-      constructorBuilder.addStatement("super($S, $S, $S, $T.of(), null)", "", "", "", Map.class);
+      constructorBuilder.addStatement("super()");
     }
     type.addMethod(constructorBuilder.build());
 
     type.addMethod(MethodSpec.methodBuilder("add")
         .addModifiers(Modifier.PUBLIC)
         .returns(void.class)
-        .addParameter(categoryType, "error")
+        .addParameter(rootClass, "error")
         .addStatement("errors.add($T.requireNonNull(error, $S))", Objects.class, "error")
         .build());
 
-    ClassName collectionType = ClassName.get("java.util", "Collection");
-    TypeName collectionCategory = ParameterizedTypeName.get(collectionType, WildcardTypeName.subtypeOf(categoryType));
     type.addMethod(MethodSpec.methodBuilder("addAll")
         .addModifiers(Modifier.PUBLIC)
         .returns(void.class)
@@ -409,18 +439,13 @@ public final class JavaGenerator {
         .addStatement("return $T.copyOf(errors)", List.class)
         .build());
 
-    type.addMethod(MethodSpec.methodBuilder("recoverable")
-        .addModifiers(Modifier.PUBLIC)
-        .returns(boolean.class)
-        .addStatement("return false")
-        .build());
-
-    type.addMethod(MethodSpec.methodBuilder("coreValues")
-        .addAnnotation(Override.class)
-        .addModifiers(Modifier.PROTECTED)
-        .returns(mapStringObject)
-        .addStatement("return $T.of()", Map.class)
-        .build());
+    if (includeHttpStatus) {
+      type.addMethod(MethodSpec.methodBuilder("httpStatus")
+          .addModifiers(Modifier.PUBLIC)
+          .returns(int.class)
+          .addStatement("return httpStatus")
+          .build());
+    }
 
     return type.build();
   }
@@ -776,13 +801,13 @@ public final class JavaGenerator {
     ClassName restControllerAdvice = ClassName.get("org.springframework.web.bind.annotation", "RestControllerAdvice");
     ClassName exceptionHandler = ClassName.get("org.springframework.web.bind.annotation", "ExceptionHandler");
     ClassName responseEntity = ClassName.get("org.springframework.http", "ResponseEntity");
-    ClassName linkedHashMap = ClassName.get(LinkedHashMap.class);
     ClassName mapType = ClassName.get(Map.class);
     TypeName mapStringObject = ParameterizedTypeName.get(mapType, ClassName.get(String.class), ClassName.get(Object.class));
 
     TypeSpec.Builder type = TypeSpec.classBuilder(baseExceptionName(spec) + "Handler")
         .addModifiers(Modifier.PUBLIC)
-        .addAnnotation(restControllerAdvice);
+        .addAnnotation(restControllerAdvice)
+        .superclass(ClassName.get(spec.getPackageName(), "ExceptionHandlerBase"));
 
     ClassName rootType = ClassName.get(spec.getPackageName(), baseExceptionName(spec));
     MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("handle" + baseExceptionName(spec))
@@ -793,32 +818,50 @@ public final class JavaGenerator {
         .addParameter(rootType, "exception")
         .returns(ParameterizedTypeName.get(responseEntity, mapStringObject))
         .addStatement("$T body = mapResponse(exception.errorInfo())", mapStringObject);
+    methodBuilder.addStatement("return $T.status(exception.httpStatus()).body(body)", responseEntity);
+    type.addMethod(methodBuilder.build());
 
     for (CategoryDef category : spec.getCategories().values()) {
       if (!category.isContainer()) {
         continue;
       }
       ClassName containerType = ClassName.get(spec.getPackageName(), category.getName() + "ContainerException");
-      ClassName categoryType = ClassName.get(spec.getPackageName(), category.getName() + "Exception");
-      TypeName listResponse = ParameterizedTypeName.get(ClassName.get(List.class), mapStringObject);
-      methodBuilder.beginControlFlow("if (exception instanceof $T)", containerType)
-          .addStatement("$T container = ($T) exception", containerType, containerType)
-          .addStatement("$T errors = new $T<>()", listResponse, ArrayList.class)
-          .beginControlFlow("for ($T error : container.errors())", categoryType)
-          .addStatement("$T entry = new $T<>()", mapStringObject, linkedHashMap)
-          .addStatement("entry.put($S, mapResponse(error.errorInfo()))", spec.getContainerItemKey())
-          .addStatement("errors.add(entry)")
+      MethodSpec.Builder containerHandler = MethodSpec.methodBuilder("handle" + category.getName() + "ContainerException")
+          .addModifiers(Modifier.PUBLIC)
+          .addAnnotation(AnnotationSpec.builder(exceptionHandler)
+              .addMember("value", "$T.class", containerType)
+              .build())
+          .addParameter(containerType, "exception")
+          .returns(ParameterizedTypeName.get(responseEntity, mapStringObject))
+          .addStatement("$T infos = new $T<>()", ParameterizedTypeName.get(ClassName.get(List.class), mapStringObject),
+              ArrayList.class)
+          .beginControlFlow("for ($T error : exception.errors())", rootType)
+          .addStatement("infos.add(error.errorInfo())")
           .endControlFlow()
-          .addStatement("$T wrapper = new $T<>()", mapStringObject, linkedHashMap)
-          .addStatement("wrapper.put($S, errors)", spec.getContainerWrapperKey())
-          .addStatement("return $T.status(exception.httpStatus()).body(wrapper)", responseEntity)
-          .endControlFlow();
+          .addStatement("$T rendered = renderContainerTemplate(CONTAINER_TEMPLATE, infos)", Object.class)
+          .addStatement("return $T.status(exception.httpStatus()).body(($T) rendered)", responseEntity, mapStringObject);
+      type.addMethod(containerHandler.build());
     }
-    methodBuilder.addStatement("return $T.status(exception.httpStatus()).body(body)", responseEntity);
-    type.addMethod(methodBuilder.build());
+
+    return type.build();
+  }
+
+  private TypeSpec buildSpringHandlerBase(EdlSpec spec) {
+    ClassName linkedHashMap = ClassName.get(LinkedHashMap.class);
+    ClassName mapType = ClassName.get(Map.class);
+    TypeName mapStringObject = ParameterizedTypeName.get(mapType, ClassName.get(String.class), ClassName.get(Object.class));
+
+    TypeSpec.Builder type = TypeSpec.classBuilder("ExceptionHandlerBase")
+        .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT);
+
+    FieldSpec templateField = FieldSpec.builder(Object.class, "CONTAINER_TEMPLATE",
+        Modifier.PROTECTED, Modifier.STATIC, Modifier.FINAL)
+        .initializer("$L", renderTemplateLiteral(spec.getContainerResponseTemplate()))
+        .build();
+    type.addField(templateField);
 
     MethodSpec.Builder mapResponse = MethodSpec.methodBuilder("mapResponse")
-        .addModifiers(Modifier.PRIVATE, Modifier.STATIC)
+        .addModifiers(Modifier.PROTECTED)
         .returns(mapStringObject)
         .addParameter(mapStringObject, "info")
         .addStatement("$T body = new $T<>()", mapStringObject, linkedHashMap);
@@ -832,10 +875,114 @@ public final class JavaGenerator {
     mapResponse.addStatement("return body");
     type.addMethod(mapResponse.build());
 
+    MethodSpec.Builder renderContainer = MethodSpec.methodBuilder("renderContainerTemplate")
+        .addModifiers(Modifier.PROTECTED)
+        .returns(Object.class)
+        .addParameter(Object.class, "template")
+        .addParameter(ParameterizedTypeName.get(ClassName.get(List.class), mapStringObject), "infos");
+    renderContainer.beginControlFlow("if (template instanceof $T)", Map.class)
+        .addStatement("$T result = new $T<>()", mapStringObject, linkedHashMap)
+        .addStatement("$T map = ($T) template", mapStringObject, mapStringObject)
+        .beginControlFlow("for ($T.Entry<String, Object> entry : map.entrySet())", Map.class)
+        .addStatement("result.put(entry.getKey(), renderContainerTemplate(entry.getValue(), infos))")
+        .endControlFlow()
+        .addStatement("return result")
+        .endControlFlow();
+    renderContainer.beginControlFlow("if (template instanceof $T)", List.class)
+        .addStatement("$T list = ($T) template", List.class, List.class)
+        .beginControlFlow("if (list.size() == 1)")
+        .addStatement("$T rendered = new $T<>()",
+            ParameterizedTypeName.get(ClassName.get(List.class), ClassName.get(Object.class)),
+            ArrayList.class)
+        .beginControlFlow("for ($T info : infos)", mapStringObject)
+        .addStatement("rendered.add(renderValue(list.get(0), info))")
+        .endControlFlow()
+        .addStatement("return rendered")
+        .endControlFlow()
+        .addStatement("return list")
+        .endControlFlow();
+    renderContainer.addStatement("return template");
+    type.addMethod(renderContainer.build());
+
+    MethodSpec.Builder renderValue = MethodSpec.methodBuilder("renderValue")
+        .addModifiers(Modifier.PROTECTED)
+        .returns(Object.class)
+        .addParameter(Object.class, "template")
+        .addParameter(mapStringObject, "info");
+    renderValue.beginControlFlow("if (template instanceof $T)", Map.class)
+        .addStatement("$T result = new $T<>()", mapStringObject, linkedHashMap)
+        .addStatement("$T map = ($T) template", mapStringObject, mapStringObject)
+        .beginControlFlow("for ($T.Entry<String, Object> entry : map.entrySet())", Map.class)
+        .addStatement("result.put(entry.getKey(), renderValue(entry.getValue(), info))")
+        .endControlFlow()
+        .addStatement("return result")
+        .endControlFlow();
+    renderValue.beginControlFlow("if (template instanceof $T)", List.class)
+        .addStatement("$T list = ($T) template", List.class, List.class)
+        .addStatement("$T rendered = new $T<>()",
+            ParameterizedTypeName.get(ClassName.get(List.class), ClassName.get(Object.class)),
+            ArrayList.class)
+        .beginControlFlow("for (Object entry : list)")
+        .addStatement("rendered.add(renderValue(entry, info))")
+        .endControlFlow()
+        .addStatement("return rendered")
+        .endControlFlow();
+    renderValue.beginControlFlow("if (template instanceof $T)", String.class)
+        .addStatement("$T key = ($T) template", String.class, String.class)
+        .beginControlFlow("if (info.containsKey(key))")
+        .addStatement("return info.get(key)")
+        .endControlFlow()
+        .addStatement("return key")
+        .endControlFlow();
+    renderValue.addStatement("return template");
+    type.addMethod(renderValue.build());
+
     return type.build();
   }
 
   private String baseExceptionName(EdlSpec spec) {
     return spec.getBaseException() + "Exception";
+  }
+
+  private CodeBlock renderTemplateLiteral(Object template) {
+    if (template == null) {
+      return CodeBlock.of("$T.of()", Map.class);
+    }
+    if (template instanceof Map<?, ?> map) {
+      CodeBlock.Builder builder = CodeBlock.builder();
+      builder.add("$T.ofEntries(", Map.class);
+      boolean first = true;
+      for (Map.Entry<?, ?> entry : map.entrySet()) {
+        if (!first) {
+          builder.add(", ");
+        }
+        first = false;
+        builder.add("$T.entry($S, $L)", Map.class, String.valueOf(entry.getKey()), renderTemplateLiteral(entry.getValue()));
+      }
+      builder.add(")");
+      return builder.build();
+    }
+    if (template instanceof List<?> list) {
+      CodeBlock.Builder builder = CodeBlock.builder();
+      builder.add("$T.of(", List.class);
+      for (int i = 0; i < list.size(); i++) {
+        if (i > 0) {
+          builder.add(", ");
+        }
+        builder.add("$L", renderTemplateLiteral(list.get(i)));
+      }
+      builder.add(")");
+      return builder.build();
+    }
+    if (template instanceof String) {
+      return CodeBlock.of("$S", template);
+    }
+    if (template instanceof Number) {
+      return CodeBlock.of("$L", template);
+    }
+    if (template instanceof Boolean) {
+      return CodeBlock.of("$L", template);
+    }
+    return CodeBlock.of("$S", String.valueOf(template));
   }
 }

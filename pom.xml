@@ -11,6 +11,7 @@
     <module>edl-core</module>
     <module>edl-maven-plugin</module>
     <module>edl-samples</module>
+    <module>edl-spring-sample</module>
   </modules>
 
   <properties>

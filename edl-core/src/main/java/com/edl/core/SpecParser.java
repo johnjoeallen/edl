@@ -26,7 +26,7 @@ public final class SpecParser {
     String source = readString(map, diagnostics, file, marks, "source", true);
     Map<String, Object> options = readMap(map, diagnostics, file, marks, "options", false);
     LinkedHashMap<String, String> responseFields = readStringMap(map, diagnostics, file, marks, "response", false);
-    Map<String, Object> containerResponse = readMap(map, diagnostics, file, marks, "containerResponse", false);
+    Object containerResponse = readObject(map, diagnostics, file, marks, "containerResponse", false);
     LinkedHashMap<String, CategoryDef> categories = readCategories(map, diagnostics, file, marks);
     LinkedHashMap<String, ErrorDef> errors = readErrors(map, diagnostics, file, marks);
 
@@ -39,18 +39,9 @@ public final class SpecParser {
     }
     String containerWrapperKey = "errors";
     String containerItemKey = "error";
-    if (containerResponse != null && !containerResponse.isEmpty()) {
-      String wrapper = readString(containerResponse, diagnostics, file, marks, "containerResponse.wrapper", false);
-      String item = readString(containerResponse, diagnostics, file, marks, "containerResponse.item", false);
-      if (wrapper != null && !wrapper.isBlank()) {
-        containerWrapperKey = wrapper;
-      }
-      if (item != null && !item.isBlank()) {
-        containerItemKey = item;
-      }
-    }
+    Object containerTemplate = containerResponse;
     EdlSpec spec = new EdlSpec(packageName, baseException, source, options,
-        containerWrapperKey, containerItemKey, responseFields, categories, errors);
+        containerWrapperKey, containerItemKey, containerTemplate, responseFields, categories, errors);
     return new ParseResult(spec, diagnostics);
   }
 
@@ -95,6 +86,45 @@ public final class SpecParser {
       categories.put(name, new CategoryDef(name, parent, codePrefix, httpStatus, retryable, isAbstract, isContainer, params));
     }
     return categories;
+  }
+
+  private Object readObject(Map<String, Object> map,
+                            List<Diagnostic> diagnostics,
+                            String file,
+                            Map<String, Mark> marks,
+                            String path,
+                            boolean required) {
+    Object value = map.get(lastSegment(path));
+    if (value == null) {
+      if (required) {
+        diagnostics.add(diagnostic(DiagnosticSeverity.ERROR, "Missing required key '" + lastSegment(path) + "'", path, file, marks));
+      }
+      return null;
+    }
+    return coerceObject(value, diagnostics, file, marks, path);
+  }
+
+  private Object coerceObject(Object value,
+                              List<Diagnostic> diagnostics,
+                              String file,
+                              Map<String, Mark> marks,
+                              String path) {
+    if (value instanceof Map<?, ?> rawMap) {
+      return toLinkedMap(rawMap, diagnostics, file, marks, path);
+    }
+    if (value instanceof List<?> rawList) {
+      List<Object> list = new ArrayList<>();
+      for (int i = 0; i < rawList.size(); i++) {
+        Object entry = rawList.get(i);
+        list.add(coerceObject(entry, diagnostics, file, marks, path + "[" + i + "]"));
+      }
+      return list;
+    }
+    if (value instanceof String || value instanceof Number || value instanceof Boolean) {
+      return value;
+    }
+    diagnostics.add(diagnostic(DiagnosticSeverity.ERROR, "Unsupported value in '" + lastSegment(path) + "'", path, file, marks));
+    return null;
   }
 
   private LinkedHashMap<String, ErrorDef> readErrors(Map<String, Object> map,
