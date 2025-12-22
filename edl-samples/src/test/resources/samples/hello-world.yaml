@@ -5,6 +5,7 @@ categories:
   Common:
     codePrefix: CM
     httpStatus: 500
+    container: true
     params:
       source: String
       code: String
@@ -26,3 +27,6 @@ response:
   description: Description
   details: Details
   recoverable: Recoverable
+containerResponse:
+  wrapper: errors
+  item: error
