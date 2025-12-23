@@ -1,6 +1,6 @@
 package com.example.hello;
 
-public final class CommonContainerException extends ContainerExceptionBase {
+public final class CommonContainerException extends HelloContainerException {
   private static final int HTTP_STATUS = 500;
 
   public CommonContainerException() {

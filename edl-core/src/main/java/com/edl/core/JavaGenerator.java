@@ -367,7 +367,7 @@ public final class JavaGenerator {
   private TypeSpec buildCategoryContainerException(EdlSpec spec,
                                                    CategoryDef category,
                                                    Map<String, ClassName> categoryTypes) {
-    ClassName containerBase = ClassName.get(spec.getPackageName(), "ContainerExceptionBase");
+    ClassName containerBase = ClassName.get(spec.getPackageName(), containerBaseName(spec));
     ClassName categoryType = categoryTypes.get(category.getName());
     ClassName containerType = ClassName.get(spec.getPackageName(), category.getName() + "ContainerException");
     TypeSpec.Builder type = TypeSpec.classBuilder(category.getName() + "ContainerException")
@@ -408,7 +408,7 @@ public final class JavaGenerator {
     TypeName listCategory = ParameterizedTypeName.get(listType, rootClass);
     TypeName collectionCategory = ParameterizedTypeName.get(collectionType, WildcardTypeName.subtypeOf(rootClass));
 
-    TypeSpec.Builder type = TypeSpec.classBuilder("ContainerExceptionBase")
+    TypeSpec.Builder type = TypeSpec.classBuilder(containerBaseName(spec))
         .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
         .superclass(ClassName.get(RuntimeException.class));
 
@@ -954,6 +954,10 @@ public final class JavaGenerator {
 
   private String baseExceptionName(EdlSpec spec) {
     return spec.getBaseException() + "Exception";
+  }
+
+  private String containerBaseName(EdlSpec spec) {
+    return spec.getBaseException() + "ContainerException";
   }
 
   private CodeBlock renderTemplateLiteral(Object template) {

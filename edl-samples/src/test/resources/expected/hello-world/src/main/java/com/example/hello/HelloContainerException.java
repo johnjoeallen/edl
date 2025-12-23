@@ -6,12 +6,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class ContainerExceptionBase extends RuntimeException {
+public abstract class HelloContainerException extends RuntimeException {
   private final int httpStatus;
 
   protected final List<HelloException> errors = new ArrayList<>();
 
-  protected ContainerExceptionBase(int httpStatus) {
+  protected HelloContainerException(int httpStatus) {
     super();
     this.httpStatus = httpStatus;
   }
