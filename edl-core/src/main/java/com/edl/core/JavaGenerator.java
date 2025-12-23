@@ -46,7 +46,8 @@ public final class JavaGenerator {
 
   public List<Path> generate(EdlSpec spec, Path outputDirectory) throws IOException {
     List<Path> generatedFiles = new ArrayList<>();
-    Path packageDir = outputDirectory.resolve(spec.getPackageName().replace('.', '/'));
+    Path sourceRoot = outputDirectory.resolve("src").resolve("main").resolve("java");
+    Path packageDir = sourceRoot.resolve(spec.getPackageName().replace('.', '/'));
     Files.createDirectories(packageDir);
 
     JavaFile rootFile = JavaFile.builder(spec.getPackageName(), buildRootException(spec)).indent("  ").build();
@@ -88,7 +89,8 @@ public final class JavaGenerator {
   }
 
   public Path generateSpringHandler(EdlSpec spec, Path outputDirectory) throws IOException {
-    Path packageDir = outputDirectory.resolve(spec.getPackageName().replace('.', '/'));
+    Path sourceRoot = outputDirectory.resolve("src").resolve("main").resolve("java");
+    Path packageDir = sourceRoot.resolve(spec.getPackageName().replace('.', '/'));
     Files.createDirectories(packageDir);
     JavaFile baseHandlerFile = JavaFile.builder(spec.getPackageName(), buildSpringHandlerBase(spec)).indent("  ").build();
     JavaFile handlerFile = JavaFile.builder(spec.getPackageName(), buildSpringHandler(spec)).indent("  ").build();

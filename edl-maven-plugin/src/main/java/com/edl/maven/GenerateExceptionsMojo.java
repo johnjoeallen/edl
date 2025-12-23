@@ -69,7 +69,8 @@ public final class GenerateExceptionsMojo extends AbstractMojo {
     }
 
     Path outputPath = outputDirectory.toPath();
-    project.addCompileSourceRoot(outputPath.toString());
+    Path sourceRoot = outputPath.resolve("src").resolve("main").resolve("java");
+    project.addCompileSourceRoot(sourceRoot.toString());
     getLog().info("EDL generated " + result.getGeneratedFiles().size() + " files into " + outputPath);
   }
 }

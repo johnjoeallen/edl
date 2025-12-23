@@ -8,17 +8,17 @@
 [INFO] edl-samples                                                        [jar]
 [INFO] 
 [INFO] -------------------------< com.edl:edl-parent >-------------------------
-[INFO] Building edl-parent 0.1.0-SNAPSHOT                                 [1/4]
+[INFO] Building edl-parent 0.1.1-SNAPSHOT                                 [1/4]
 [INFO]   from pom.xml
 [INFO] --------------------------------[ pom ]---------------------------------
 [INFO] 
 [INFO] --- clean:3.2.0:clean (default-clean) @ edl-parent ---
 [INFO] 
 [INFO] --- install:3.1.2:install (default-install) @ edl-parent ---
-[INFO] Installing /home/jallen/git/edl/pom.xml to /home/jallen/.m2/repository/com/edl/edl-parent/0.1.0-SNAPSHOT/edl-parent-0.1.0-SNAPSHOT.pom
+[INFO] Installing /home/jallen/git/edl/pom.xml to /home/jallen/.m2/repository/com/edl/edl-parent/0.1.1-SNAPSHOT/edl-parent-0.1.1-SNAPSHOT.pom
 [INFO] 
 [INFO] --------------------------< com.edl:edl-core >--------------------------
-[INFO] Building edl-core 0.1.0-SNAPSHOT                                   [2/4]
+[INFO] Building edl-core 0.1.1-SNAPSHOT                                   [2/4]
 [INFO]   from edl-core/pom.xml
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO] 
@@ -43,7 +43,7 @@
 [INFO] 2 errors 
 [INFO] -------------------------------------------------------------
 [INFO] ------------------------------------------------------------------------
-[INFO] Reactor Summary for edl-parent 0.1.0-SNAPSHOT:
+[INFO] Reactor Summary for edl-parent 0.1.1-SNAPSHOT:
 [INFO] 
 [INFO] edl-parent ......................................... SUCCESS [  0.090 s]
 [INFO] edl-core ........................................... FAILURE [  0.423 s]
