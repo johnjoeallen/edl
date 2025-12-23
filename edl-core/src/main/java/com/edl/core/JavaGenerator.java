@@ -368,6 +368,8 @@ public final class JavaGenerator {
                                                    CategoryDef category,
                                                    Map<String, ClassName> categoryTypes) {
     ClassName containerBase = ClassName.get(spec.getPackageName(), "ContainerExceptionBase");
+    ClassName categoryType = categoryTypes.get(category.getName());
+    ClassName containerType = ClassName.get(spec.getPackageName(), category.getName() + "ContainerException");
     TypeSpec.Builder type = TypeSpec.classBuilder(category.getName() + "ContainerException")
         .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
         .superclass(containerBase);
@@ -386,6 +388,14 @@ public final class JavaGenerator {
       constructorBuilder.addStatement("super()");
     }
     type.addMethod(constructorBuilder.build());
+
+    type.addMethod(MethodSpec.methodBuilder("add")
+        .addModifiers(Modifier.PUBLIC)
+        .returns(containerType)
+        .addParameter(categoryType, "error")
+        .addStatement("super.add(error)")
+        .addStatement("return this")
+        .build());
 
     return type.build();
   }

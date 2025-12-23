@@ -6,4 +6,9 @@ public final class CommonContainerException extends ContainerExceptionBase {
   public CommonContainerException() {
     super(HTTP_STATUS);
   }
+
+  public CommonContainerException add(CommonException error) {
+    super.add(error);
+    return this;
+  }
 }

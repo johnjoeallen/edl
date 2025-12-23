@@ -222,7 +222,7 @@ public final class HelloWorldException extends CommonException {
 <plugin>
   <groupId>com.edl</groupId>
   <artifactId>edl-maven-plugin</artifactId>
-  <version>0.1.1-SNAPSHOT</version>
+  <version>0.1.2</version>
   <executions>
     <execution>
       <goals>

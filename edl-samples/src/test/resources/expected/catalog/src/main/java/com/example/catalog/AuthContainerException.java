@@ -6,4 +6,9 @@ public final class AuthContainerException extends ContainerExceptionBase {
   public AuthContainerException() {
     super(HTTP_STATUS);
   }
+
+  public AuthContainerException add(AuthException error) {
+    super.add(error);
+    return this;
+  }
 }
