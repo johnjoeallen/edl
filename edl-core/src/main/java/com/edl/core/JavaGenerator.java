@@ -277,7 +277,7 @@ public final class JavaGenerator {
     }
 
     for (Map.Entry<String, String> entry : customCoreParams) {
-      TypeName typeName = parseTypeName(entry.getValue());
+      TypeName typeName = toObjectType(parseTypeName(entry.getValue()));
       type.addField(FieldSpec.builder(typeName, entry.getKey(), Modifier.PRIVATE, Modifier.FINAL).build());
       type.addMethod(MethodSpec.methodBuilder(entry.getKey())
           .addModifiers(Modifier.PUBLIC)
@@ -307,7 +307,7 @@ public final class JavaGenerator {
           Objects.class, "errorCode");
     }
     for (Map.Entry<String, String> entry : customCoreParams) {
-      TypeName typeName = parseTypeName(entry.getValue());
+      TypeName typeName = toObjectType(parseTypeName(entry.getValue()));
       constructorBuilder.addParameter(typeName, entry.getKey());
       constructorBuilder.addStatement("this.$L = $L", entry.getKey(), entry.getKey());
     }
@@ -442,7 +442,7 @@ public final class JavaGenerator {
 
     // Add custom core params to protected constructor
     for (Map.Entry<String, String> entry : customCoreParams) {
-      TypeName typeName = parseTypeName(entry.getValue());
+      TypeName typeName = toObjectType(parseTypeName(entry.getValue()));
       protectedConstructorBuilder.addParameter(typeName, entry.getKey());
     }
 
@@ -605,14 +605,14 @@ public final class JavaGenerator {
     List<TypeName> paramTypes = new ArrayList<>();
     List<String> coreParamNames = new ArrayList<>();
     for (Map.Entry<String, String> entry : customCoreParams) {
-      TypeName typeName = parseTypeName(entry.getValue());
+      TypeName typeName = toObjectType(parseTypeName(entry.getValue()));
       paramTypes.add(typeName);
       params.add(ParameterSpec.builder(typeName, entry.getKey()).build());
       coreParamNames.add(entry.getKey());
     }
 
     for (Map.Entry<String, String> entry : error.getRequiredParams().entrySet()) {
-      TypeName typeName = parseTypeName(entry.getValue());
+      TypeName typeName = toObjectType(parseTypeName(entry.getValue()));
       paramTypes.add(typeName);
       params.add(ParameterSpec.builder(typeName, entry.getKey()).build());
       type.addField(FieldSpec.builder(typeName, entry.getKey(), Modifier.PRIVATE, Modifier.FINAL).build());
@@ -624,7 +624,7 @@ public final class JavaGenerator {
     }
 
     for (Map.Entry<String, String> entry : error.getOptionalParams().entrySet()) {
-      TypeName typeName = parseTypeName(entry.getValue());
+      TypeName typeName = toObjectType(parseTypeName(entry.getValue()));
       paramTypes.add(typeName);
       params.add(ParameterSpec.builder(typeName, entry.getKey()).build());
       type.addField(FieldSpec.builder(typeName, entry.getKey(), Modifier.PRIVATE, Modifier.FINAL).build());
@@ -880,6 +880,10 @@ public final class JavaGenerator {
       return WildcardTypeName.supertypeOf(parseTypeName(arg.substring(8)));
     }
     return parseTypeName(arg);
+  }
+
+  private TypeName toObjectType(TypeName typeName) {
+    return typeName.isPrimitive() ? typeName.box() : typeName;
   }
 
   private Set<String> extractPlaceholders(String... templates) {

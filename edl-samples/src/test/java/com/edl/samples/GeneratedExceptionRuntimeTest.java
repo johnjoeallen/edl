@@ -1,6 +1,7 @@
 package com.edl.samples;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -11,6 +12,7 @@ import com.edl.core.DiagnosticSeverity;
 import com.edl.core.EdlCompiler;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
@@ -165,6 +167,68 @@ public class GeneratedExceptionRuntimeTest {
 
       assertEquals(sortedMap(expectedAda), sortedMap(errors.get(0)));
       assertEquals(sortedMap(expectedBob), sortedMap(errors.get(1)));
+    } finally {
+      classLoader.close();
+    }
+  }
+
+  @Test
+  void primitiveParamsAreBoxedToObjectTypes() throws Exception {
+    String yaml = "package: com.example.typed\n"
+        + "baseException: Typed\n"
+        + "source: typed-service\n"
+        + "categories:\n"
+        + "  Common:\n"
+        + "    codePrefix: CM\n"
+        + "    container: true\n"
+        + "    httpStatus: 400\n"
+        + "    params:\n"
+        + "      source: String\n"
+        + "      code: String\n"
+        + "      description: String\n"
+        + "      detail: String\n"
+        + "      recoverable: boolean\n"
+        + "      details: Object\n"
+        + "      attempts: int\n"
+        + "errors:\n"
+        + "  badInput:\n"
+        + "    category: Common\n"
+        + "    fixed:\n"
+        + "      code: 1\n"
+        + "      description: \"Bad input {name}\"\n"
+        + "      details: \"Bad input {name}\"\n"
+        + "    required:\n"
+        + "      name: String\n"
+        + "      count: int\n";
+
+    Path spec = Files.createTempFile("edl-test-typed", ".yaml");
+    Files.writeString(spec, yaml, StandardCharsets.UTF_8);
+    Path outputDir = Files.createTempDirectory("edl-generated-typed");
+
+    EdlCompiler compiler = new EdlCompiler();
+    CompilationResult result = compiler.compile(spec, outputDir, new CompilerOptions(false, true));
+    assertTrue(result.getDiagnostics().stream().noneMatch(d -> d.getSeverity() == DiagnosticSeverity.ERROR),
+        formatDiagnostics(result.getDiagnostics()));
+
+    Path classesDir = Files.createTempDirectory("edl-classes-typed");
+    compileSources(outputDir, classesDir);
+
+    URLClassLoader classLoader = new URLClassLoader(new URL[] { classesDir.toUri().toURL() });
+    try {
+      Class<?> categoryClass = classLoader.loadClass("com.example.typed.CommonException");
+      assertEquals(Integer.class, categoryClass.getMethod("attempts").getReturnType());
+
+      Class<?> errorClass = classLoader.loadClass("com.example.typed.BadInputException");
+      assertEquals(Integer.class, errorClass.getMethod("count").getReturnType());
+
+      Class<?> builderClass = classLoader.loadClass("com.example.typed.BadInputException$Builder");
+      assertEquals(Integer.class, builderClass.getMethod("count", Integer.class).getParameterTypes()[0]);
+
+      Class<?> containerClass = classLoader.loadClass("com.example.typed.CommonContainerException");
+      assertFalse(Modifier.isFinal(containerClass.getModifiers()));
+      // Constructor includes boxed custom core params when category defines primitive types.
+      assertNotNull(containerClass.getDeclaredConstructor(
+          String.class, int.class, String.class, String.class, Map.class, Throwable.class, Integer.class));
     } finally {
       classLoader.close();
     }
