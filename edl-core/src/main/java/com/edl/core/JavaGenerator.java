@@ -367,34 +367,124 @@ public final class JavaGenerator {
   private TypeSpec buildCategoryContainerException(EdlSpec spec,
                                                    CategoryDef category,
                                                    Map<String, ClassName> categoryTypes) {
-    ClassName containerBase = ClassName.get(spec.getPackageName(), containerBaseName(spec));
     ClassName categoryType = categoryTypes.get(category.getName());
     ClassName containerType = ClassName.get(spec.getPackageName(), category.getName() + "ContainerException");
+
+    // Get custom core params from category
+    List<Map.Entry<String, String>> customCoreParams = new ArrayList<>();
+    for (Map.Entry<String, String> entry : category.getParams().entrySet()) {
+      if (!DERIVED_PARAMS.contains(entry.getKey())) {
+        customCoreParams.add(entry);
+      }
+    }
+
+    // Container exception extends the category exception (not the base container)
+    // This allows error exceptions to extend the container
     TypeSpec.Builder type = TypeSpec.classBuilder(category.getName() + "ContainerException")
-        .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-        .superclass(containerBase);
+        .addModifiers(Modifier.PUBLIC)
+        .superclass(categoryType);
+
+    // Add a list to hold errors
+    TypeName listCategory = ParameterizedTypeName.get(ClassName.get(List.class), categoryType);
+    type.addField(FieldSpec.builder(listCategory, "errors", Modifier.PRIVATE, Modifier.FINAL)
+        .initializer("new $T<>()", ArrayList.class)
+        .build());
 
     if (includeHttpStatus) {
-      type.addField(FieldSpec.builder(int.class, "HTTP_STATUS", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+      type.addField(FieldSpec.builder(int.class, "HTTP_STATUS", Modifier.PROTECTED, Modifier.STATIC, Modifier.FINAL)
           .initializer("$L", category.getHttpStatus())
           .build());
     }
 
-    MethodSpec.Builder constructorBuilder = MethodSpec.constructorBuilder()
+    // Public no-arg constructor for creating empty containers
+    MethodSpec.Builder noArgConstructorBuilder = MethodSpec.constructorBuilder()
         .addModifiers(Modifier.PUBLIC);
+    // Call the category exception constructor with empty/default values
     if (includeHttpStatus) {
-      constructorBuilder.addStatement("super(HTTP_STATUS)");
+      StringBuilder superCall = new StringBuilder("super($S, HTTP_STATUS, $S, $S, $T.of(), null");
+      List<Object> superArgs = new ArrayList<>();
+      superArgs.add("");  // errorCode
+      superArgs.add("");  // descriptionTemplate
+      superArgs.add("");  // detailTemplate
+      superArgs.add(Map.class);
+      for (Map.Entry<String, String> entry : customCoreParams) {
+        superCall.append(", null");
+      }
+      superCall.append(")");
+      noArgConstructorBuilder.addStatement(superCall.toString(), superArgs.toArray());
     } else {
-      constructorBuilder.addStatement("super()");
+      StringBuilder superCall = new StringBuilder("super($S, $S, $S, $T.of(), null");
+      List<Object> superArgs = new ArrayList<>();
+      superArgs.add("");  // errorCode
+      superArgs.add("");  // descriptionTemplate
+      superArgs.add("");  // detailTemplate
+      superArgs.add(Map.class);
+      for (Map.Entry<String, String> entry : customCoreParams) {
+        superCall.append(", null");
+      }
+      superCall.append(")");
+      noArgConstructorBuilder.addStatement(superCall.toString(), superArgs.toArray());
     }
-    type.addMethod(constructorBuilder.build());
+    type.addMethod(noArgConstructorBuilder.build());
 
+    // Protected constructor for error exceptions to call
+    MethodSpec.Builder protectedConstructorBuilder = MethodSpec.constructorBuilder()
+        .addModifiers(Modifier.PROTECTED)
+        .addParameter(String.class, "errorCode");
+    if (includeHttpStatus) {
+      protectedConstructorBuilder.addParameter(int.class, "httpStatus");
+    }
+    protectedConstructorBuilder
+        .addParameter(String.class, "descriptionTemplate")
+        .addParameter(String.class, "detailTemplate")
+        .addParameter(ParameterizedTypeName.get(ClassName.get(Map.class), ClassName.get(String.class), ClassName.get(Object.class)), "details")
+        .addParameter(Throwable.class, "cause");
+
+    // Add custom core params to protected constructor
+    for (Map.Entry<String, String> entry : customCoreParams) {
+      TypeName typeName = parseTypeName(entry.getValue());
+      protectedConstructorBuilder.addParameter(typeName, entry.getKey());
+    }
+
+    // Build super call with all params
+    StringBuilder superCall = new StringBuilder("super(errorCode, ");
+    if (includeHttpStatus) {
+      superCall.append("httpStatus, ");
+    }
+    superCall.append("descriptionTemplate, detailTemplate, details, cause");
+    for (Map.Entry<String, String> entry : customCoreParams) {
+      superCall.append(", ").append(entry.getKey());
+    }
+    superCall.append(")");
+    protectedConstructorBuilder.addStatement(superCall.toString());
+
+    type.addMethod(protectedConstructorBuilder.build());
+
+    // Add method to add errors to the container
     type.addMethod(MethodSpec.methodBuilder("add")
         .addModifiers(Modifier.PUBLIC)
         .returns(containerType)
         .addParameter(categoryType, "error")
-        .addStatement("super.add(error)")
+        .addStatement("errors.add($T.requireNonNull(error, $S))", Objects.class, "error")
         .addStatement("return this")
+        .build());
+
+    // AddAll method
+    TypeName collectionCategory = ParameterizedTypeName.get(ClassName.get("java.util", "Collection"),
+        WildcardTypeName.subtypeOf(categoryType));
+    type.addMethod(MethodSpec.methodBuilder("addAll")
+        .addModifiers(Modifier.PUBLIC)
+        .returns(containerType)
+        .addParameter(collectionCategory, "errors")
+        .addStatement("this.errors.addAll($T.requireNonNull(errors, $S))", Objects.class, "errors")
+        .addStatement("return this")
+        .build());
+
+    // Errors getter method
+    type.addMethod(MethodSpec.methodBuilder("errors")
+        .addModifiers(Modifier.PUBLIC)
+        .returns(listCategory)
+        .addStatement("return $T.copyOf(errors)", List.class)
         .build());
 
     return type.build();
@@ -466,10 +556,17 @@ public final class JavaGenerator {
                                        CategoryDef category,
                                        ErrorDef error,
                                        Map<String, ClassName> categoryTypes) {
-    ClassName categoryType = categoryTypes.get(category.getName());
+    // If category has container: true, error exceptions should extend the container exception
+    ClassName superclass;
+    if (category.isContainer()) {
+      superclass = ClassName.get(spec.getPackageName(), category.getName() + "ContainerException");
+    } else {
+      superclass = categoryTypes.get(category.getName());
+    }
+
     TypeSpec.Builder type = TypeSpec.classBuilder(NameUtils.toPascalCase(error.getName()) + "Exception")
         .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-        .superclass(categoryType);
+        .superclass(superclass);
 
     type.addField(FieldSpec.builder(String.class, "ERROR_CODE", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
         .initializer("$S", error.getNumericCode())
@@ -838,6 +935,7 @@ public final class JavaGenerator {
         continue;
       }
       ClassName containerType = ClassName.get(spec.getPackageName(), category.getName() + "ContainerException");
+      ClassName categoryType = ClassName.get(spec.getPackageName(), category.getName() + "Exception");
       MethodSpec.Builder containerHandler = MethodSpec.methodBuilder("handle" + category.getName() + "ContainerException")
           .addModifiers(Modifier.PUBLIC)
           .addAnnotation(AnnotationSpec.builder(exceptionHandler)
@@ -847,8 +945,14 @@ public final class JavaGenerator {
           .returns(ParameterizedTypeName.get(responseEntity, mapStringObject))
           .addStatement("$T infos = new $T<>()", ParameterizedTypeName.get(ClassName.get(List.class), mapStringObject),
               ArrayList.class)
-          .beginControlFlow("for ($T error : exception.errors())", rootType)
+          // If errors list is empty, add the container exception itself as the single error
+          .beginControlFlow("if (exception.errors().isEmpty())")
+          .addStatement("infos.add(exception.errorInfo())")
+          .nextControlFlow("else")
+          // Otherwise add all errors from the list
+          .beginControlFlow("for ($T error : exception.errors())", categoryType)
           .addStatement("infos.add(error.errorInfo())")
+          .endControlFlow()
           .endControlFlow()
           .addStatement("$T rendered = renderContainerTemplate(CONTAINER_TEMPLATE, infos)", Object.class)
           .addStatement("return $T.status(exception.httpStatus()).body(($T) rendered)", responseEntity, mapStringObject);

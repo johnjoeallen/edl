@@ -126,13 +126,13 @@ public class GeneratedExceptionRuntimeTest {
     try {
       Class<?> containerClass = classLoader.loadClass("com.example.catalog.AuthContainerException");
       Class<?> errorClass = classLoader.loadClass("com.example.catalog.FooErrorException");
-      Class<?> catalogExceptionClass = classLoader.loadClass("com.example.catalog.CatalogException");
+      Class<?> authExceptionClass = classLoader.loadClass("com.example.catalog.AuthException");
       Class<?> handlerClass = classLoader.loadClass("com.example.catalog.CatalogExceptionHandler");
 
       Object container = containerClass.getConstructor().newInstance();
-      containerClass.getMethod("add", catalogExceptionClass)
+      containerClass.getMethod("add", authExceptionClass)
           .invoke(container, buildFooError(errorClass, "Ada"));
-      containerClass.getMethod("add", catalogExceptionClass)
+      containerClass.getMethod("add", authExceptionClass)
           .invoke(container, buildFooError(errorClass, "Bob"));
 
       Object handler = handlerClass.getConstructor().newInstance();

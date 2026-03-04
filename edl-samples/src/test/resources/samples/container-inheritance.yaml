@@ -1,0 +1,45 @@
+package: com.example.containerinheritance
+baseException: ContainerInheritance
+source: container-inheritance-service
+categories:
+  Base:
+    codePrefix: BASE
+    httpStatus: 500
+    container: true
+    params:
+      source: String
+      code: String
+      description: String
+      details: String
+  Validation:
+    parent: Base
+    codePrefix: VAL
+    httpStatus: 400
+    container: true
+    params:
+      source: String
+      code: String
+      description: String
+      details: String
+errors:
+  invalidEmail:
+    category: Validation
+    fixed:
+      code: "12"
+      description: "Invalid email {email}"
+      details: "Invalid email {email} detail"
+    required:
+      email: String
+response:
+  source: Source
+  code: ReasonCode
+  description: Description
+  details: Details
+  recoverable: Recoverable
+containerResponse:
+  Error:
+    - Source: source
+      ReasonCode: code
+      Description: description
+      Details: details
+      Recoverable: recoverable

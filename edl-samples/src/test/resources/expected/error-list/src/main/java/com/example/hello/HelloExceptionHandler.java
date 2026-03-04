@@ -18,10 +18,15 @@ public class HelloExceptionHandler extends ExceptionHandlerBase {
   }
 
   @ExceptionHandler(CommonContainerException.class)
-  public ResponseEntity<Map<String, Object>> handleCommonContainerException(CommonContainerException exception) {
+  public ResponseEntity<Map<String, Object>> handleCommonContainerException(
+      CommonContainerException exception) {
     List<Map<String, Object>> infos = new ArrayList<>();
-    for (HelloException error : exception.errors()) {
-      infos.add(error.errorInfo());
+    if (exception.errors().isEmpty()) {
+      infos.add(exception.errorInfo());
+    } else {
+      for (CommonException error : exception.errors()) {
+        infos.add(error.errorInfo());
+      }
     }
     Object rendered = renderContainerTemplate(CONTAINER_TEMPLATE, infos);
     return ResponseEntity.status(exception.httpStatus()).body((Map<String, Object>) rendered);

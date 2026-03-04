@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public final class HelloWorldException extends CommonException {
+public final class HelloWorldException extends CommonContainerException {
   public static final String ERROR_CODE = "0001";
 
   public static final String DESCRIPTION_TEMPLATE = "Hello {name}";

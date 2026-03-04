@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class HierarchyExceptionHandler extends ExceptionHandlerBase {
-
   @ExceptionHandler(HierarchyException.class)
   public ResponseEntity<Map<String, Object>> handleHierarchyException(
       HierarchyException exception) {

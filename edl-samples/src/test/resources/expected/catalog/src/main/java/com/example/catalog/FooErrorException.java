@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public final class FooErrorException extends AuthException {
+public final class FooErrorException extends AuthContainerException {
   public static final String ERROR_CODE = "0001";
 
   public static final String DESCRIPTION_TEMPLATE = "Userid invalid {userId}";

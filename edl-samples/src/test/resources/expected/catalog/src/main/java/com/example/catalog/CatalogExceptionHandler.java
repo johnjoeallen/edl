@@ -18,10 +18,15 @@ public class CatalogExceptionHandler extends ExceptionHandlerBase {
   }
 
   @ExceptionHandler(AuthContainerException.class)
-  public ResponseEntity<Map<String, Object>> handleAuthContainerException(AuthContainerException exception) {
+  public ResponseEntity<Map<String, Object>> handleAuthContainerException(
+      AuthContainerException exception) {
     List<Map<String, Object>> infos = new ArrayList<>();
-    for (CatalogException error : exception.errors()) {
-      infos.add(error.errorInfo());
+    if (exception.errors().isEmpty()) {
+      infos.add(exception.errorInfo());
+    } else {
+      for (AuthException error : exception.errors()) {
+        infos.add(error.errorInfo());
+      }
     }
     Object rendered = renderContainerTemplate(CONTAINER_TEMPLATE, infos);
     return ResponseEntity.status(exception.httpStatus()).body((Map<String, Object>) rendered);

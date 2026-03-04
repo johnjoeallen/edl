@@ -29,11 +29,16 @@ public class HelloControllerTest {
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     Map<String, Object> body = objectMapper.readValue(response.getBody(), Map.class);
-    assertEquals("sample-service", body.get("Source"));
-    assertEquals("CM0002", body.get("ReasonCode"));
-    assertEquals("Invalid name Ada", body.get("Description"));
-    assertEquals("Name Ada is invalid", body.get("Details"));
-    assertEquals(false, body.get("Recoverable"));
+    // Single errors that extend container exceptions now return container format with a list of one item
+    List<Map<String, Object>> errors = (List<Map<String, Object>>) body.get("Error");
+    assertNotNull(errors);
+    assertEquals(1, errors.size());
+    Map<String, Object> error = errors.get(0);
+    assertEquals("sample-service", error.get("Source"));
+    assertEquals("CM0002", error.get("ReasonCode"));
+    assertEquals("Invalid name Ada", error.get("Description"));
+    assertEquals("Name Ada is invalid", error.get("Details"));
+    assertEquals(false, error.get("Recoverable"));
   }
 
   @Test
